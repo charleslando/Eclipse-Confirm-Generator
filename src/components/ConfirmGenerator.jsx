@@ -31,8 +31,12 @@ const ConfirmGenerator = () => {
 
     const sampleTrade = () => {
         const examples = [
+            'Z25 5.00c LIVE',
+            'Z25 3.25p LIVE',
             'U25 2.75/4.25 fence x3.31 27d',
-            'H25 straddle 3.25 vs call 4.00 x1.85'
+            'Q25 4.25 Call x3.65 28d',
+            'J26 3.75/4.00cs vs. 3.00/2.75ps x3.56 12d'
+          //  'H25 straddle 3.25 vs call 4.00 x1.85'
         ];
 
         let choice;
@@ -41,6 +45,15 @@ const ConfirmGenerator = () => {
         } while (choice === tradeInput);
 
         setTradeInput(choice);
+    };
+    const BuildSingleStructure = () => {
+        //set the input to "-" and parse it
+        setTradeInput('-');
+        handleParse();
+    };
+    const BuildDualStructure = () => {
+        setTradeInput('vs');
+        handleParse();
     };
 
     const handleParse = () => {
@@ -116,7 +129,7 @@ const ConfirmGenerator = () => {
     return (
         <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow">
             <h1 className="text-2xl font-bold mb-4 flex items-center">
-                <FileText className="mr-2" />Trade Confirmation Generator
+                <FileText className="mr-2" />Eclipse Confirmation Generator
             </h1>
 
             <textarea
@@ -131,6 +144,8 @@ const ConfirmGenerator = () => {
                 <button onClick={handleParse} className="px-4 py-2 bg-blue-600 text-white rounded">Parse</button>
                 <button onClick={clearInput} className="px-4 py-2 bg-blue-600 text-white rounded">Clear</button>
                 <button onClick={sampleTrade} className="px-4 py-2 bg-fuchsia-700 text-white rounded">Sample</button>
+                <button onClick={BuildSingleStructure} className="px-4 py-2 bg-green-600 text-white rounded">Build Single Structure</button>
+                <button onClick={BuildDualStructure} className="px-4 py-2 bg-green-600 text-white rounded">Build Dual Structure</button>
             </div>
 
             {feedback && (
@@ -149,7 +164,7 @@ const ConfirmGenerator = () => {
                         <div className="mb-4">
                             {isDualPanel && (
                                 <p className="text-sm text-blue-600 mt-2">
-                                    This trade has a secondary structure. You can edit both structures independently.
+                                    Secondary structure detected. You can edit both structures independently.
                                 </p>
                             )}
                         </div>

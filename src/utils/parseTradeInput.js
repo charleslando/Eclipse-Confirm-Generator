@@ -93,7 +93,7 @@ export function parseTradeInput(rawInput) {
 
     // determine if there will be two strategies
 
-    const isDualStructure = isVersus || (strikes2 || underlying2 || delta2 || expiry2);
+    const isDualStructure = Boolean(isVersus || (strikes2 || underlying2 || delta2 || expiry2));
 
 
     return {
@@ -110,7 +110,8 @@ export function parseTradeInput(rawInput) {
         delta2,
         price,
         lots,
-        isDualStructure
+        isDualStructure,
+        isLive
     };
 }
 
