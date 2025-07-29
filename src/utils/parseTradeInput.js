@@ -11,12 +11,12 @@ export function parseTradeInput(rawInput) {
 
     // 3) Flags
     const isLive           = /live/i.test(raw);
-    const isCalendarSpread = /\bvs\.?\b/i.test(raw);
+    const isVersus = /\bvs\.?\b/i.test(raw);
 
     // 4) Expiries
     const expiryMatches = raw.match(/\b[FGHJKMNQUVXZ]\d{2}\b/g) || [];
     const expiry  = expiryMatches[0] || null;
-    const expiry2 = isCalendarSpread ? expiryMatches[1] || null : null;
+    const expiry2 = isVersus ? expiryMatches[1] || null : null;
 
     // 5) Strikes (and handle inline “cs”/“ps” suffixes automatically)
     let strikes = [];
@@ -26,9 +26,9 @@ export function parseTradeInput(rawInput) {
         strikes = m[1].split('/').map(n => parseFloat(n));
     }
 
-    // 6) Strikes2 for calendar
+    // 6) Strikes2
     let strikes2 = null;
-    if (isCalendarSpread) {
+    if (isVersus) {
         const afterVs = raw.split(/vs\.?/i)[1] || '';
         const tok2 = afterVs.trim().split(/\s+/)
             .find(t => /^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i.test(t));
@@ -43,7 +43,7 @@ export function parseTradeInput(rawInput) {
     const underlying = underTok ? parseFloat(underTok.slice(1)) : null;
 
     let underlying2 = null;
-    if (isCalendarSpread) {
+    if (isVersus) {
         const afterVs = raw.split(/vs\.?/i)[1] || '';
         const underTok2 = afterVs.trim().split(/\s+/)
             .find(t => /^[Xx]\d+(\.\d+)?$/.test(t));
@@ -65,6 +65,8 @@ export function parseTradeInput(rawInput) {
 
     // 11) Strategy‑type inference
     let strategyType = 'Unknown';
+    let strategyType2 = null;
+
     if      (lower.includes('iron fly'))                                 strategyType = 'Iron Fly';
     else if (lower.includes('condor'))                                   strategyType = 'Condor';
     else if (lower.includes('fence'))                                    strategyType = 'Fence';
@@ -88,8 +90,11 @@ export function parseTradeInput(rawInput) {
         else                                                               strategyType = 'Single Option';
     }
 
-    // 12) Prefix “Calendar ” if it’s a vs‑spread
-    if (isCalendarSpread) strategyType = 'Calendar ' + strategyType;
+
+    // determine if there will be two strategies
+
+    const isDualStructure = isVersus || (strikes2 || underlying2 || delta2 || expiry2);
+
 
     return {
         exchange,
@@ -98,13 +103,44 @@ export function parseTradeInput(rawInput) {
         strikes,
         strikes2,
         strategyType,
+        strategyType2,
         underlying,
         underlying2,
         delta,
         delta2,
         price,
         lots,
-        isCalendarSpread,
-        isLive
+        isDualStructure
     };
 }
+
+
+export const STRATEGY_CONFIGS = {
+    // Single structure strategies
+    'Call Option': { dualPanel: false },
+    'Put Option': { dualPanel: false },
+    'Vertical Call Spread': { dualPanel: false },
+    'Horizontal Call Spread': { dualPanel: true },
+    'Diagonal Call Spread': { dualPanel: true },
+    'Vertical Put Spread': { dualPanel: false },
+    'Horizontal Put Spread': { dualPanel: true },
+    'Diagonal Put Spread': { dualPanel: true },
+    'Straddle': { dualPanel: true },
+    'Strangle': { dualPanel: true },
+    'Straddle Spread': { dualPanel: true },
+    'Diagonal Straddle Spread': { dualPanel: true },
+    'Fence': { dualPanel: false },
+    'Call Fly': { dualPanel: false },
+    'Put Fly': { dualPanel: false },
+    'Conversion/Reversal': { dualPanel: true },
+    'Iron Butterfly': { dualPanel: false },
+    'Call Condor': { dualPanel: false },
+    'Put Condor': { dualPanel: false },
+    'Iron Condor': { dualPanel: false },
+    'Call Tree': { dualPanel: true },
+    'Put Tree': { dualPanel: true },
+    '3-Way: Call Spread v Put': { dualPanel: true },
+    '3-Way: Put Spread v Call': { dualPanel: true },
+    '3-Way: Straddle v Call': { dualPanel: true },
+    '3-Way: Straddle v Put': { dualPanel: true }
+};

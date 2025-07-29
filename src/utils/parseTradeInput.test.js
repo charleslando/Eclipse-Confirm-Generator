@@ -54,9 +54,9 @@ describe('parseTradeInput() - Additional Strategy Examples', () => {
     // Vertical Spreads
     it('parses a Vertical Call Spread', () => {
         const input = 'Q25 3.65/4.00 cs LIVE'
-        'WTI v25 75/85 cs x65.35 TRADES 0.39 8d (750x)'
-        'HORIZONTAL''Brent V25/X25 65 ps x68.10/67.45 TRADES 1.04 25d/35d (600x)'
-        ''
+        const vertical = 'WTI v25 75/85 cs x65.35 TRADES 0.39 8d (750x)'
+        const horizontal = 'Brent V25/X25 65 ps x68.10/67.45 TRADES 1.04 25d/35d (600x)'
+
         const out = parseTradeInput(input)
 
         expect(out).toEqual({

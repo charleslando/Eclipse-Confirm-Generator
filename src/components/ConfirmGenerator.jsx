@@ -5,6 +5,8 @@ import { generateTradeLines } from '../utils/generateTradeLines';
 import LegPricesSection from './LegPricesSection';
 import CounterpartySection from './CounterpartySection';
 import OutputSection from './OutputSection';
+import TradeDetailsPanel from './TradeDetailsPanel';
+import { STRATEGY_CONFIGS } from '../utils/parseTradeInput.js';
 
 const ConfirmGenerator = () => {
     const [tradeInput, setTradeInput] = useState('');
@@ -29,7 +31,8 @@ const ConfirmGenerator = () => {
 
     const sampleTrade = () => {
         const examples = [
-            'U25 2.75/4.25 fence x3.31 27d TRADES .0260 (400x)'
+            'U25 2.75/4.25 fence x3.31 27d',
+            'H25 straddle 3.25 vs call 4.00 x1.85'
         ];
 
         let choice;
@@ -57,13 +60,14 @@ const ConfirmGenerator = () => {
                 strikes: pt.strikes,
                 strikes2: pt.strikes2,
                 strategyType: pt.strategyType,
+                strategyType2: pt.strategyType2,
                 underlying: pt.underlying,
                 underlying2: pt.underlying2,
                 delta: pt.delta,
                 delta2: pt.delta2,
                 price: pt.price,
                 lots: pt.lots,
-                isCalendarSpread: pt.isCalendarSpread,
+                isDualStructure: pt.isDualStructure,
                 isLive: pt.isLive
             };
             setParsedTrade(parsed);
@@ -103,6 +107,12 @@ const ConfirmGenerator = () => {
         setOutput(confs.join('\n'));
     };
 
+
+
+    //const currentStrategyConfig = parsedTrade ? STRATEGY_CONFIGS[parsedTrade.strategyType] : null;
+    const isDualPanel = parsedTrade?.isDualStructure || false;
+
+
     return (
         <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow">
             <h1 className="text-2xl font-bold mb-4 flex items-center">
@@ -126,8 +136,8 @@ const ConfirmGenerator = () => {
             {feedback && (
                 <div className={`mt-2 p-2 rounded ${
                     feedback.type === 'error' ? 'bg-red-100 text-red-700' :
-                        feedback.type === 'success' ? 'bg-green-100 text-green-700' :
-                            'bg-blue-100 text-blue-700'}`}
+                    feedback.type === 'success' ? 'bg-green-100 text-green-700' :
+                    'bg-blue-100 text-blue-700'}`}
                 >
                     {feedback.message}
                 </div>
@@ -135,94 +145,52 @@ const ConfirmGenerator = () => {
 
             {parsedTrade && (
                 <>
-                    <div className="mt-6 bg-gray-50 p-4 rounded">
-                        <h3 className="font-semibold mb-2">Parsed Trade Details</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label>Expiry</label>
-                                <input
-                                    className="w-full p-1 border rounded"
-                                    value={parsedTrade.expiry}
-                                    onChange={e => setParsedTrade({ ...parsedTrade, expiry: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label>Strategy</label>
-                                <select
-                                    className="w-full p-1 border rounded"
-                                    value={parsedTrade.strategyType}
-                                    onChange={e => setParsedTrade({ ...parsedTrade, strategyType: e.target.value })}
-                                >
-                                    {[ 'Call Option', 'Put Option',
-                                        'Vertical Call Spread', 'Horizontal Call Spread', 'Diagonal Call Spread',
-                                        'Vertical Put Spread', 'Horizontal Put Spread', 'Diagonal Put Spread',
-                                        'Straddle', 'Strangle',
-                                        'Straddle Spread', 'Diagonal Straddle Spread',
-                                        'Fence', 'Call Fly', 'Put Fly',
-                                        'Conversion/Reversal', 'Iron Butterfly',
-                                        'Call Condor', 'Put Condor', 'Iron Condor',
-                                        'Call Tree', 'Put Tree',
-                                        '3-Way: Call Spread v Put', '3-Way: Put Spread v Call', '3-Way: Straddle v Call', '3-Way: Straddle v Put'
-                                    ]
-                                        .map(s => <option key={s}>{s}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label>Strikes</label>
-                                <input
-                                    className="w-full p-1 border rounded"
-                                    value={parsedTrade.strikes.join(', ')}
-                                    onChange={e => setParsedTrade({ ...parsedTrade, strikes: e.target.value.split(',').map(s => s.trim()) })}
-                                />
-                            </div>
-                            <div>
-                                <label>Trade Type</label><br />
-                                <label><input type="radio" name="tradeType" value="Live" checked={parsedTrade.isLive} onChange={e => setParsedTrade({ ...parsedTrade, isLive: true })} /> Live</label>
-                                <label><input type="radio" name="tradeType" value="Hedged" checked={!parsedTrade.isLive} onChange={e => setParsedTrade({ ...parsedTrade, isLive: false })} /> Hedged</label>
-                            </div>
-                            {!parsedTrade.isLive && (
-                                <>
-                                    <div>
-                                        <label>Delta</label>
-                                            <input
-                                                type="number"
-                                                className="w-full p-1 border rounded"
-                                                value={parsedTrade.delta}
-                                                onChange={e => setParsedTrade({ ...parsedTrade, delta: parseInt(e.target.value, 10) || 0 })}
-                                            />
-                                    </div>
-                                    <div>
-                                        <label>Underlying</label>
-                                            <input
-                                                type="number"
-                                                className="w-full p-1 border rounded"
-                                                value={parsedTrade.underlying}
-                                                onChange={e => setParsedTrade({ ...parsedTrade, underlying: parseInt(e.target.value, 10) || 0 })}
-                                            />
-                                    </div>
-                                </>
+                    <div className="mt-6 bg-blue-50 p-4 rounded">
+                        <div className="mb-4">
+                            {isDualPanel && (
+                                <p className="text-sm text-blue-600 mt-2">
+                                    This trade has a secondary structure. You can edit both structures independently.
+                                </p>
                             )}
-                            <div>
-                                <label>Commodity</label>
-                                <select
-                                    className="w-full p-1 border rounded"
-                                    value={commodity}
-                                    onChange={e => setCommodity(e.target.value)}
-                                >
-                                    {[ 'LN', 'HP', 'PHE', 'E7' ].map(c => <option key={c}>{c}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label>Cleared</label>
-                                <select
-                                    className="w-full p-1 border rounded"
-                                    value={cleared}
-                                    onChange={e => setCleared(e.target.value)}
-                                >
-                                    {[ 'CME', 'ICE' ].map(c => <option key={c}>{c}</option>)}
-                                </select>
-                            </div>
                         </div>
+                        {/* Trade Details Panels */}
+                        {isDualPanel ? (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <TradeDetailsPanel
+                                    title="Structure 1"
+                                    parsedTrade={parsedTrade}
+                                    setParsedTrade={setParsedTrade}
+                                    isSecondary={false}
+                                    commodity={commodity}
+                                    setCommodity={setCommodity}
+                                    cleared={cleared}
+                                    setCleared={setCleared}
+                                />
+                                <TradeDetailsPanel
+                                    title="Structure 2"
+                                    parsedTrade={parsedTrade}
+                                    setParsedTrade={setParsedTrade}
+                                    isSecondary={true}
+                                    commodity={commodity}
+                                    setCommodity={setCommodity}
+                                    cleared={cleared}
+                                    setCleared={setCleared}
+                                />
+                            </div>
+                        ) : (
+                            <TradeDetailsPanel
+                                title="Trade Details"
+                                parsedTrade={parsedTrade}
+                                setParsedTrade={setParsedTrade}
+                                isSecondary={false}
+                                commodity={commodity}
+                                setCommodity={setCommodity}
+                                cleared={cleared}
+                                setCleared={setCleared}
+                            />
+                        )}
+
+
                     </div>
 
                     <div className="mt-6 space-y-4">
@@ -230,6 +198,11 @@ const ConfirmGenerator = () => {
                         <CounterpartySection title="Buyers" list={counterparties.buyers} setList={l => setCounterparties({ ...counterparties, buyers: l })} />
                         <CounterpartySection title="Sellers" list={counterparties.sellers} setList={l => setCounterparties({ ...counterparties, sellers: l })} />
                         <button onClick={generateConfirmations} className="w-full py-2 bg-green-600 text-white rounded">Generate Confirmations</button>
+
+                        {/* Debug Info */}
+                        <div className="bg-gray-100 p-3 rounded text-xs">
+                            <strong>Parsed Data:</strong> {JSON.stringify(parsedTrade, null, 2)}
+                        </div>
                     </div>
                 </>
             )}
