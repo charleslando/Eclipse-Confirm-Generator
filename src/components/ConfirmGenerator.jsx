@@ -15,6 +15,8 @@ const ConfirmGenerator = () => {
     const [feedback, setFeedback] = useState(null);
     const [cleared, setCleared] = useState('CME');
     const [commodity, setCommodity] = useState('LN');
+    const [timeStamp, setTimestamp] = useState(new Date().toLocaleTimeString());
+
 
     const clearInput = () => {
         setTradeInput('');
@@ -69,6 +71,8 @@ const ConfirmGenerator = () => {
             setCounterparties({ buyers: [], sellers: [] });
             setOutput('');
             setFeedback({ type: 'success', message: 'Trade input parsed successfully!' });
+
+
         } catch (err) {
             setFeedback({ type: 'error', message: `Parsing failed: ${err.message}` });
             clearInput();
@@ -222,7 +226,7 @@ const ConfirmGenerator = () => {
                     </div>
 
                     <div className="mt-6 space-y-4">
-                        <LegPricesSection strikes={parsedTrade.strikes} legPrices={legPrices} setLegPrices={setLegPrices} />
+                        <LegPricesSection parsedTrade = {parsedTrade} legPrices={legPrices} setLegPrices={setLegPrices} timeStamp={timeStamp} setTimestamp={setTimestamp} />
                         <CounterpartySection title="Buyers" list={counterparties.buyers} setList={l => setCounterparties({ ...counterparties, buyers: l })} />
                         <CounterpartySection title="Sellers" list={counterparties.sellers} setList={l => setCounterparties({ ...counterparties, sellers: l })} />
                         <button onClick={generateConfirmations} className="w-full py-2 bg-green-600 text-white rounded">Generate Confirmations</button>

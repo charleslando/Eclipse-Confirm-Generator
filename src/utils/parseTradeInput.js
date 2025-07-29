@@ -61,7 +61,7 @@ export function parseTradeInput(rawInput) {
 
     // 10) Lots at end “(500x)”
     const lotsMatch = raw.match(/\((\d+)x\)$/);
-    const lots      = lotsMatch ? parseInt(lotsMatch[1], 10) : null;
+    const lots      = lotsMatch ? parseInt(lotsMatch[1], 10) : 100;
 
     // 11) Strategy‑type inference
     let strategyType = 'Unknown';
@@ -83,8 +83,8 @@ export function parseTradeInput(rawInput) {
         else                                                               strategyType = 'Spread';
     }
     else if (strikes.length === 1) {
-        if      (lower.includes('put '))                                   strategyType = 'Put';
-        else if (lower.includes('call '))                                  strategyType = 'Call';
+        if      (lower.includes('put ') || lower.includes('p'))                                   strategyType = 'Put Option';
+        else if (lower.includes('call ') || lower.includes('c'))                                  strategyType = 'Call Option';
         else                                                               strategyType = 'Single Option';
     }
 

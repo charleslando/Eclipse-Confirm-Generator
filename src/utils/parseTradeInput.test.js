@@ -30,12 +30,12 @@ describe('parseTradeInput() - Additional Strategy Examples', () => {
     })
 
     it('parses a simple Put Option', () => {
-        const input = 'SDO 3.25p LIVE TRADES .0030 (100x)'
+        const input = 'Z25 3.25p LIVE'
         const out = parseTradeInput(input)
 
         expect(out).toEqual({
             exchange: null,
-            expiry: 'SDO',
+            expiry: 'Z25',
             expiry2: null,
             strikes: [3.25],
             strikes2: null,
@@ -44,7 +44,7 @@ describe('parseTradeInput() - Additional Strategy Examples', () => {
             underlying2: null,
             delta: null,
             delta2: null,
-            price: 0.0030,
+            price: null,
             lots: 100,
             isCalendarSpread: false,
             isLive: true
@@ -53,7 +53,10 @@ describe('parseTradeInput() - Additional Strategy Examples', () => {
 
     // Vertical Spreads
     it('parses a Vertical Call Spread', () => {
-        const input = 'Q25 3.65/4.00 cs LIVE TRADES .0770 (100x)'
+        const input = 'Q25 3.65/4.00 cs LIVE'
+        'WTI v25 75/85 cs x65.35 TRADES 0.39 8d (750x)'
+        'HORIZONTAL''Brent V25/X25 65 ps x68.10/67.45 TRADES 1.04 25d/35d (600x)'
+        ''
         const out = parseTradeInput(input)
 
         expect(out).toEqual({
@@ -67,7 +70,7 @@ describe('parseTradeInput() - Additional Strategy Examples', () => {
             underlying2: null,
             delta: null,
             delta2: null,
-            price: 0.0770,
+            price: null,
             lots: 100,
             isCalendarSpread: false,
             isLive: true
