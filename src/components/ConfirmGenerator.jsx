@@ -35,8 +35,19 @@ const ConfirmGenerator = () => {
             'Z25 3.25p LIVE',
             'U25 2.75/4.25 fence x3.31 27d',
             'Q25 4.25 Call x3.65 28d',
-            'J26 3.75/4.00cs vs. 3.00/2.75ps x3.56 12d'
-          //  'H25 straddle 3.25 vs call 4.00 x1.85'
+        ];
+
+        let choice;
+        do {
+            choice = examples[Math.floor(Math.random() * examples.length)];
+        } while (choice === tradeInput);
+
+        setTradeInput(choice);
+    };
+    const sampleDualTrade = () => {
+        const examples = [
+            'J26 3.75/4.00cs vs. 3.00/2.75ps x3.56 12d',
+            'H25 straddle 3.25 vs call 4.00 x1.85'
         ];
 
         let choice;
@@ -143,7 +154,8 @@ const ConfirmGenerator = () => {
             <div className="flex gap-x-2 mt-2">
                 <button onClick={handleParse} className="px-4 py-2 bg-blue-600 text-white rounded">Parse</button>
                 <button onClick={clearInput} className="px-4 py-2 bg-blue-600 text-white rounded">Clear</button>
-                <button onClick={sampleTrade} className="px-4 py-2 bg-fuchsia-700 text-white rounded">Sample</button>
+                <button onClick={sampleTrade} className="px-4 py-2 bg-fuchsia-700 text-white rounded">Sample Single</button>
+                <button onClick={sampleDualTrade} className="px-4 py-2 bg-fuchsia-700 text-white rounded">Sample Double</button>
                 <button onClick={BuildSingleStructure} className="px-4 py-2 bg-green-600 text-white rounded">Build Single Structure</button>
                 <button onClick={BuildDualStructure} className="px-4 py-2 bg-green-600 text-white rounded">Build Dual Structure</button>
             </div>
