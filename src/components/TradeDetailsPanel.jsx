@@ -6,10 +6,6 @@ const TradeDetailsPanel = ({
                                parsedTrade,
                                setParsedTrade,
                                isSecondary = false,
-                               commodity,
-                               setCommodity,
-                               cleared,
-                               setCleared
                            }) => {
     const expiryKey = isSecondary ? 'expiry2' : 'expiry';
     const strikesKey = isSecondary ? 'strikes2' : 'strikes';
@@ -54,33 +50,7 @@ const TradeDetailsPanel = ({
                     />
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium mb-1">Trade Type</label>
-                    <div className="flex gap-4">
-                        <label className="flex items-center">
-                            <input
-                                type="radio"
-                                name={`tradeType${isSecondary ? '2' : ''}`}
-                                value="Live"
-                                checked={parsedTrade.isLive}
-                                onChange={() => setParsedTrade({ ...parsedTrade, isLive: true })}
-                                className="mr-1"
-                            />
-                            Live
-                        </label>
-                        <label className="flex items-center">
-                            <input
-                                type="radio"
-                                name={`tradeType${isSecondary ? '2' : ''}`}
-                                value="Hedged"
-                                checked={!parsedTrade.isLive}
-                                onChange={() => setParsedTrade({ ...parsedTrade, isLive: false })}
-                                className="mr-1"
-                            />
-                            Hedged
-                        </label>
-                    </div>
-                </div>
+
 
                 {!parsedTrade.isLive && (
                     <>
@@ -107,35 +77,6 @@ const TradeDetailsPanel = ({
                                     [underlyingKey]: parseFloat(e.target.value) || 0
                                 })}
                             />
-                        </div>
-                    </>
-                )}
-
-                {!isSecondary && (
-                    <>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Commodity</label>
-                            <select
-                                className="w-full p-2 border rounded"
-                                value={commodity}
-                                onChange={e => setCommodity(e.target.value)}
-                            >
-                                {['LN', 'HP', 'PHE', 'E7'].map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Cleared</label>
-                            <select
-                                className="w-full p-2 border rounded"
-                                value={cleared}
-                                onChange={e => setCleared(e.target.value)}
-                            >
-                                {['CME', 'ICE'].map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
                         </div>
                     </>
                 )}

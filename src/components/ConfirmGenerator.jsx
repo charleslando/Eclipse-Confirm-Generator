@@ -9,6 +9,8 @@ import TradeDetailsPanel from './TradeDetailsPanel';
 import { STRATEGY_CONFIGS } from '../utils/parseTradeInput.js';
 
 const ConfirmGenerator = () => {
+    //const [exchange, setExchange] = useState('CME');
+    const [productCode, setProductCode] = useState('LN');
     const [tradeInput, setTradeInput] = useState('');
     const [parsedTrade, setParsedTrade] = useState(null);
     const [legPrices, setLegPrices] = useState([]);
@@ -172,6 +174,33 @@ const ConfirmGenerator = () => {
 
             {parsedTrade && (
                 <>
+                    <div className="flex grid-cols 2 gap-4 mt-4">
+                        <label className="flex items-center gap-2">
+                        <span className="font-semibold">Exchange:</span>
+                            <select
+                                className="p-1 border rounded"
+                                value={parsedTrade.exchange}
+                                onChange={e => setParsedTrade({ ...parsedTrade, exchange: e.target.value})}
+                            >
+                                <option value="CME">CME</option>
+                                <option value="ICE">ICE</option>
+
+                            </select>
+                        </label>
+                        <label className="flex items-center gap-2">
+                            <span className="font-semibold">Product Code:</span>
+                            <select
+                                className="p-1 border rounded"
+                                value={productCode}
+                                onChange={e => setProductCode(e.target.value)}
+                            >
+                                <option value="LN">LN</option>
+                                <option value="PHE">PHE</option>
+
+                            </select>
+                        </label>
+                    </div>
+
                     <div className="mt-6 bg-blue-50 p-4 rounded">
                         <div className="mb-4">
                             {isDualPanel && (
@@ -188,20 +217,15 @@ const ConfirmGenerator = () => {
                                     parsedTrade={parsedTrade}
                                     setParsedTrade={setParsedTrade}
                                     isSecondary={false}
-                                    commodity={commodity}
-                                    setCommodity={setCommodity}
-                                    cleared={cleared}
-                                    setCleared={setCleared}
+
+
                                 />
                                 <TradeDetailsPanel
                                     title="Structure 2"
                                     parsedTrade={parsedTrade}
                                     setParsedTrade={setParsedTrade}
                                     isSecondary={true}
-                                    commodity={commodity}
-                                    setCommodity={setCommodity}
-                                    cleared={cleared}
-                                    setCleared={setCleared}
+
                                 />
                             </div>
                         ) : (
@@ -210,14 +234,36 @@ const ConfirmGenerator = () => {
                                 parsedTrade={parsedTrade}
                                 setParsedTrade={setParsedTrade}
                                 isSecondary={false}
-                                commodity={commodity}
-                                setCommodity={setCommodity}
-                                cleared={cleared}
-                                setCleared={setCleared}
+
                             />
                         )}
-
-
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Trade Type</label>
+                            <div className="flex gap-4">
+                                <label className="flex items-center">
+                                    <input
+                                        type="radio"
+                                        name={"tradeType"}
+                                        value="Live"
+                                        checked={parsedTrade.isLive}
+                                        onChange={() => setParsedTrade({ ...parsedTrade, isLive: true })}
+                                        className="mr-1"
+                                    />
+                                    Live
+                                </label>
+                                <label className="flex items-center">
+                                    <input
+                                        type="radio"
+                                        name={"tradeType"}
+                                        value="Hedged"
+                                        checked={!parsedTrade.isLive}
+                                        onChange={() => setParsedTrade({ ...parsedTrade, isLive: false })}
+                                        className="mr-1"
+                                    />
+                                    Hedged
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="mt-6 space-y-4">
