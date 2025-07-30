@@ -10,17 +10,36 @@ export function parseTradeInput(rawInput) {
     const exchange = knownExchanges.find(ex => raw.includes(ex)) || null;
 
     // 3) Flags
-    const isLive           = /live/i.test(raw);
-    const isVersus = /\bvs\.?\b/i.test(raw);
+    const isLive           = /live/i.test(raw); // "live" indicates a live trade
+    const isVersus = /\bvs\.?\b/i.test(raw); // "vs" or "vs." indicates a versus structure
+
 
     // 4) Expiries
-    const expiryMatches = raw.match(/\b[FGHJKMNQUVXZ]\d{2}\b/g) || [];
-    const expiry  = expiryMatches[0] || null;
-    const expiry2 = isVersus ? expiryMatches[1] || null : null;
+    const QUARTER_MAPPING = { // maps month codes to quarters
+        'FH': '1Q',
+        'JM': '2Q',
+        'NV': '3Q',
+        'VZ': '4Q',
+        'XH': 'Winter ',
+        'JV': 'Summer '
+
+    };
+
+    const parseExpiry = (match) => {
+        if (!match) return null;
+        const month = match.match(/^[A-Z]+/)[0];
+        const year = match.match(/\d{2}$/)[0];
+        return QUARTER_MAPPING[month] ? QUARTER_MAPPING[month] + year : match;
+    };
+
+    const expiryMatches = raw.match(/\b[FJNVX]?[FGHJKMNQUVXZ]\d{2}\b/g) || [];
+    const expiry = parseExpiry(expiryMatches[0]);
+    const expiry2 = isVersus ? parseExpiry(expiryMatches[1]) : null;
+
 
     // 5) Strikes (and handle inline “cs”/“ps” suffixes automatically)
     let strikes = [];
-    const strikeTok = tokens.find(t => /^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i.test(t));
+    const strikeTok = tokens.find(t => /^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i.test(t)); // matches "123.45", "123.45/67.89", "123.45c", "123.45/67.89ps"
     if (strikeTok) {
         const m = strikeTok.match(/^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i);
         strikes = m[1].split('/').map(n => parseFloat(n));

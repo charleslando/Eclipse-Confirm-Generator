@@ -52,7 +52,7 @@ const LegPricesSection = ({ parsedTrade, legPrices, setLegPrices, timeStamp, set
             ) : (
                 <div>
                     <h4 className="font-semibold mb-2">Single Structure Legs</h4>
-                    {parsedTrade.strikes2.map((strike, i) => (
+                    {parsedTrade.strikes.map((strike, i) => (
                         <div key={`single-${i}`} className="flex items-center gap-2 mb-2">
                             <span className="w-12">Leg {i + 1}</span>
                             <input
