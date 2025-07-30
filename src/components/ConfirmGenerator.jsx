@@ -6,7 +6,6 @@ import LegPricesSection from './LegPricesSection';
 import CounterpartySection from './CounterpartySection';
 import OutputSection from './OutputSection';
 import TradeDetailsPanel from './TradeDetailsPanel';
-import { STRATEGY_CONFIGS } from '../utils/parseTradeInput.js';
 
 const ConfirmGenerator = () => {
     //const [exchange, setExchange] = useState('CME');
@@ -17,8 +16,6 @@ const ConfirmGenerator = () => {
     const [counterparties, setCounterparties] = useState({ buyers: [], sellers: [] });
     const [output, setOutput] = useState('');
     const [feedback, setFeedback] = useState(null);
-    const [cleared, setCleared] = useState('CME');
-    const [commodity, setCommodity] = useState('LN');
     const [timeStamp, setTimestamp] = useState(new Date().toLocaleTimeString());
 
 
@@ -58,6 +55,7 @@ const ConfirmGenerator = () => {
         } while (choice === tradeInput);
 
         setTradeInput(choice);
+
     };
     const BuildSingleStructure = () => {
         //set the input to "-" and parse it
@@ -97,7 +95,9 @@ const ConfirmGenerator = () => {
                 isLive: pt.isLive
             };
             setParsedTrade(parsed);
-            setLegPrices(parsed.strikes.map(() => ''));
+            // setLegPrices(parsed.strikes.map(() => ''));
+            const totalLegs = parsed.strikes.length + (parsed.strikes2?.length || 0);
+            setLegPrices(Array(totalLegs).fill(''));
             setCounterparties({ buyers: [], sellers: [] });
             setOutput('');
             setFeedback({ type: 'success', message: 'Trade input parsed successfully!' });
