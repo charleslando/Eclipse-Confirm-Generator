@@ -9,9 +9,7 @@ const TradeDetailsPanel = ({
                            }) => {
 
     const updateLegField = (field, value) => {
-        setLeg({
-            ...leg,
-            [field]: value
+        setLeg({...leg, [field]: value
         });
     };
 
@@ -26,12 +24,12 @@ const TradeDetailsPanel = ({
                         value={leg?.type || ''}
                         onChange={e => updateLegField('type', e.target.value)}
                     >
-                        <option value="Call">Call</option>
-                        <option value="Put">Put</option>
-                        <option value="Call Spread">Call Spread</option>
-                        <option value="Put Spread">Put Spread</option>
-                        <option value="Straddle">Straddle</option>
-                        <option value="Strangle">Strangle</option>
+                        <option value="call">Call</option>
+                        <option value="put">Put</option>
+                        <option value="call spread">Call Spread</option>
+                        <option value="put spread">Put Spread</option>
+                        <option value="straddle">Straddle</option>
+                        <option value="strangle">Strangle</option>
                     </select>
                 </div>
                 <div>
@@ -47,7 +45,7 @@ const TradeDetailsPanel = ({
                     <label className="block text-sm font-medium mb-1">Strikes</label>
                     <input
                         className="w-full p-2 border rounded"
-                        value={(leg?.strikes || []).join(', ')}
+                        value={(leg.strikes).join(', ')}
                         onChange={e => updateLegField('strikes',
                             e.target.value.split(',').map(s => s.trim()).filter(s => s)
                         )}

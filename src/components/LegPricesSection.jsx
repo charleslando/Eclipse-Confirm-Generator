@@ -1,25 +1,77 @@
 import React from 'react';
 
-const LegPricesSection = ({ trade, legPrices, setLegPrices, timeStamp, setTimestamp }) => {
-    const isDualStructure = trade?.leg2 !== null && trade?.leg2 !== undefined;
+const LegPricesSection = ({ trade, setTrade, timeStamp, setTimestamp }) => {
 
-    const updateLegPrices = (index, value) => {
-        const updatedPrices = [...legPrices];
-        updatedPrices[index] = value;
-        setLegPrices(updatedPrices);
+    const updateLegPrice = (legNumber, strikeIndex, value) => {
+        const newTrade = new trade.constructor(''); // Create new Trade instance
+
+        // Copy all properties from current trade
+        Object.assign(newTrade, trade);
+
+        // Deep copy legs to avoid mutation
+        if (trade.leg1) {
+            newTrade.leg1 = { ...trade.leg1, strikes: [...trade.leg1.strikes] };
+        }
+        if (trade.leg2) {
+            newTrade.leg2 = { ...trade.leg2, strikes: [...trade.leg2.strikes] };
+        }
+
+        // Update the specific leg's price at the strike index
+        if (legNumber === 1 && newTrade.leg1) {
+            if (!newTrade.leg1.prices) newTrade.leg1.prices = [];
+            newTrade.leg1.prices[strikeIndex] = value;
+        } else if (legNumber === 2 && newTrade.leg2) {
+            if (!newTrade.leg2.prices) newTrade.leg2.prices = [];
+            newTrade.leg2.prices[strikeIndex] = value;
+        }
+
+        setTrade(newTrade);
+    };
+
+    const getLegPrice = (legNumber, strikeIndex) => {
+        if (legNumber === 1 && trade.leg1?.prices) {
+            return trade.leg1.prices[strikeIndex] || '';
+        } else if (legNumber === 2 && trade.leg2?.prices) {
+            return trade.leg2.prices[strikeIndex] || '';
+        }
+        return '';
     };
 
     const getLegLabel = (legIndex, strikeIndex) => {
-        if (isDualStructure) {
+        if (trade.leg2) {
             return legIndex === 0 ? `Leg 1-${strikeIndex + 1}` : `Leg 2-${strikeIndex + 1}`;
         }
         return `Leg ${strikeIndex + 1}`;
     };
 
+    const getAllPrices = () => {
+        const allPrices = [];
+
+        // Get prices from leg1
+        if (trade.leg1?.strikes) {
+            trade.leg1.strikes.forEach((_, i) => {
+                const price = getLegPrice(1, i);
+                if (price) allPrices.push(parseFloat(price) || 0);
+            });
+        }
+
+        // Get prices from leg2
+        if (trade.leg2?.strikes) {
+            trade.leg2.strikes.forEach((_, i) => {
+                const price = getLegPrice(2, i);
+                if (price) allPrices.push(parseFloat(price) || 0);
+            });
+        }
+
+        return allPrices;
+    };
+
+    const allPrices = getAllPrices();
+
     return (
         <div className="bg-gray-50 p-4 rounded">
             <h3 className="font-semibold mb-2">Leg Prices</h3>
-            {isDualStructure ? (
+            {trade.leg2 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Leg 1 Strikes */}
                     <div>
@@ -33,8 +85,8 @@ const LegPricesSection = ({ trade, legPrices, setLegPrices, timeStamp, setTimest
                                     placeholder="Price"
                                     type="number"
                                     step="0.01"
-                                    value={legPrices[i] || ''}
-                                    onChange={e => updateLegPrices(i, e.target.value)}
+                                    value={getLegPrice(1, i)}
+                                    onChange={e => updateLegPrice(1, i, e.target.value)}
                                 />
                             </div>
                         ))}
@@ -43,23 +95,20 @@ const LegPricesSection = ({ trade, legPrices, setLegPrices, timeStamp, setTimest
                     {/* Leg 2 Strikes */}
                     <div>
                         <h4 className="font-semibold mb-2">Leg 2 Strikes</h4>
-                        {(trade.leg2?.strikes || []).map((strike, i) => {
-                            const priceIndex = (trade.leg1?.strikes?.length || 0) + i;
-                            return (
-                                <div key={`leg2-${i}`} className="flex items-center gap-2 mb-2">
-                                    <span className="w-16 text-sm">{getLegLabel(1, i)}</span>
-                                    <span className="w-16 text-sm text-gray-600">{strike}</span>
-                                    <input
-                                        className="flex-1 p-1 border rounded"
-                                        placeholder="Price"
-                                        type="number"
-                                        step="0.01"
-                                        value={legPrices[priceIndex] || ''}
-                                        onChange={e => updateLegPrices(priceIndex, e.target.value)}
-                                    />
-                                </div>
-                            );
-                        })}
+                        {(trade.leg2?.strikes || []).map((strike, i) => (
+                            <div key={`leg2-${i}`} className="flex items-center gap-2 mb-2">
+                                <span className="w-16 text-sm">{getLegLabel(1, i)}</span>
+                                <span className="w-16 text-sm text-gray-600">{strike}</span>
+                                <input
+                                    className="flex-1 p-1 border rounded"
+                                    placeholder="Price"
+                                    type="number"
+                                    step="0.01"
+                                    value={getLegPrice(2, i)}
+                                    onChange={e => updateLegPrice(2, i, e.target.value)}
+                                />
+                            </div>
+                        ))}
                     </div>
                 </div>
             ) : (
@@ -74,8 +123,8 @@ const LegPricesSection = ({ trade, legPrices, setLegPrices, timeStamp, setTimest
                                 placeholder="Price"
                                 type="number"
                                 step="0.01"
-                                value={legPrices[i] || ''}
-                                onChange={e => updateLegPrices(i, e.target.value)}
+                                value={getLegPrice(1, i)}
+                                onChange={e => updateLegPrice(1, i, e.target.value)}
                             />
                         </div>
                     ))}
@@ -88,15 +137,15 @@ const LegPricesSection = ({ trade, legPrices, setLegPrices, timeStamp, setTimest
                     <div className="flex flex-col">
                         <span className="font-bold text-sm">Total Price:</span>
                         <span className="text-lg">
-                            {legPrices.reduce((sum, price) => sum + (parseFloat(price) || 0), 0).toFixed(2)}
+                            {allPrices.reduce((sum, price) => sum + price, 0).toFixed(2)}
                         </span>
                     </div>
 
                     <div className="flex flex-col">
                         <span className="font-bold text-sm">Average Premium:</span>
                         <span className="text-lg">
-                            {legPrices.length > 0
-                                ? (legPrices.reduce((sum, price) => sum + (parseFloat(price) || 0), 0) / legPrices.length).toFixed(2)
+                            {allPrices.length > 0
+                                ? (allPrices.reduce((sum, price) => sum + price, 0) / allPrices.length).toFixed(2)
                                 : '0.00'
                             }
                         </span>
@@ -119,135 +168,3 @@ const LegPricesSection = ({ trade, legPrices, setLegPrices, timeStamp, setTimest
 };
 
 export default LegPricesSection;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React from 'react';
-// const LegPricesSection = ({ parsedTrade, legPrices, setLegPrices, timeStamp, setTimestamp }) => {
-//     const isDualStructure = parsedTrade?.isDualStructure || false;
-//
-//     const updateLegPrices = (index, value) => {
-//         const updatedPrices = [...legPrices];
-//         updatedPrices[index] = value;
-//         setLegPrices(updatedPrices);
-//     }
-//     return (
-//         <div className="bg-gray-50 p-4 rounded">
-//             <h3 className="font-semibold mb-2">Leg Prices</h3>
-//             {isDualStructure ? (
-//                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-//                     {/* Structure 1 Legs */}
-//                     <div>
-//                         <h4 className="font-semibold mb-2">Structure 1 Legs</h4>
-//                         {parsedTrade.strikes.map((strike, i) => (
-//                             <div key={`struct1-${i}`} className="flex items-center gap-2 mb-2">
-//                                 <span className="w-12">Leg {i + 1}</span>
-//                                 <input
-//                                     className="flex-1 p-1 border rounded"
-//                                     placeholder="Price"
-//                                     value={legPrices[i] || ''}
-//                                     onChange={e => {
-//                                         const u = [...legPrices];
-//                                         u[i] = e.target.value;
-//                                         setLegPrices(u);
-//                                     }}
-//                                 />
-//                             </div>
-//                         ))}
-//                     </div>
-//
-//                     {/* Structure 2 Legs*/}
-//                     <div>
-//                         <h4 className="font-semibold mb-2">Structure 2 Legs</h4>
-//                         {parsedTrade.strikes2.map((strike, i) => (
-//                             <div key={`struct2-${i}`} className="flex items-center gap-2 mb-2">
-//                                 <span className="w-12">Leg {i + 1}</span>
-//                                 <input
-//                                     className="flex-1 p-1 border rounded"
-//                                     placeholder="Price"
-//                                     value={legPrices[parsedTrade.strikes2.length + i] || ''}
-//                                     onChange={e => updateLegPrices(parsedTrade.strikes.length + i, e.target.value)}
-//                                 />
-//                             </div>
-//                         ))}
-//                     </div>
-//
-//                 </div>
-//             ) : (
-//                 <div>
-//                     <h4 className="font-semibold mb-2">Single Structure Legs</h4>
-//                     {parsedTrade.strikes.map((strike, i) => (
-//                         <div key={`single-${i}`} className="flex items-center gap-2 mb-2">
-//                             <span className="w-12">Leg {i + 1}</span>
-//                             <input
-//                                 className="flex-1 p-1 border rounded"
-//                                 placeholder="Price"
-//                                 value={legPrices[i] || ''}
-//                                 onChange={e => updateLegPrices(i, e.target.value)}
-//                             />
-//                         </div>
-//                     ))}
-//                 </div>
-//             )}
-//
-//             {/* Summary Section */}
-//
-//
-//             <div className="grid grid-cols-3 gap-4">
-//                 <div className="flex flex-col">
-//                     <span className="font-bold">Total Price:</span>
-//                     <span>
-//                 {legPrices.reduce((sum, price) => sum + (parseFloat(price) || 0), 0).toFixed(2)}
-//             </span>
-//                 </div>
-//
-//                 <div className="flex flex-col">
-//                     <span className="font-bold">Put/Call Premium:</span>
-//                     <span>
-//                 {(legPrices.reduce((sum, price) => sum + (parseFloat(price) || 0), 0) / legPrices.length || 0).toFixed(2)}
-//             </span>
-//                 </div>
-//
-//                 <div className="flex flex-col">
-//                     <span className="font-bold">Timestamp:</span>
-//                     <input
-//                         type="text"
-//                         className="border rounded p-1"
-//                         value={timeStamp}
-//                         onChange={e => setTimestamp(e.target.value)}
-//                     />
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// };
-//
-// export default LegPricesSection;
