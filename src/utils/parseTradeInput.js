@@ -270,6 +270,9 @@ class Trade {
     }
 
     createLeg2() {
+        if (!STRAT_CONFIGS[this.strategyType].leg2) {
+            return null; // No second leg for this strategy
+        }
         return new TradeLeg(
             false, // isBuy - opposite of leg1, or infer from input
             STRAT_CONFIGS[this.strategyType].leg2,

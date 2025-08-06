@@ -32,8 +32,7 @@ const ConfirmGenerator = () => {
         const examples = [
             'Z25 5.00c LIVE',
             'Z25 3.25p LIVE',
-            'U25 2.75/4.25 fence x3.31 27d',
-            'Q25 4.25 Call x3.65 28d',
+            'Q25 4.25 Call x3.65 28d'
         ];
 
         let choice;
@@ -47,7 +46,7 @@ const ConfirmGenerator = () => {
     const sampleDualTrade = () => {
         const examples = [
             'J26 3.75/4.00cs vs. 3.00/2.75ps x3.56 12d',
-            'H25 straddle 3.25 vs call 4.00 x1.85'
+            'U25 2.75/4.25 fence x3.31 27d'
         ];
 
         let choice;

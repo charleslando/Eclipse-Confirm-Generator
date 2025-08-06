@@ -80,33 +80,6 @@ const TradeDetailsPanel = ({
                         </div>
                     </>
                 )}
-
-                <div>
-                    <label className="block text-sm font-medium mb-1">Price</label>
-                    <input
-                        type="number"
-                        step="0.01"
-                        className="w-full p-2 border rounded"
-                        value={leg?.price || ''}
-                        onChange={e => updateLegField('price',
-                            parseFloat(e.target.value) || null
-                        )}
-                        placeholder="Enter price"
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium mb-1">Lots</label>
-                    <input
-                        type="number"
-                        className="w-full p-2 border rounded"
-                        value={leg?.lots || ''}
-                        onChange={e => updateLegField('lots',
-                            parseInt(e.target.value, 10) || null
-                        )}
-                        placeholder="Enter number of lots"
-                    />
-                </div>
             </div>
         </div>
     );
