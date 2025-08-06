@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest'
 describe('parseTradeInput() - Additional Strategy Examples', () => {
 
     // Basic Options (you already have these)
-    it('Call Option', () => {
+    it('Live Call Option', () => {
         const input = 'Z25 5.00c LIVE'
         const out = parseTradeInput(input)
 
@@ -30,7 +30,7 @@ describe('parseTradeInput() - Additional Strategy Examples', () => {
         })
     })
 
-    it('Call Option With Trades', () => {
+    it('Live Call Option With Trades', () => {
         const input = 'V25 4.50c LIVE TRADES 0.290 (200x)'
         const out = parseTradeInput(input)
 
@@ -76,7 +76,30 @@ describe('parseTradeInput() - Additional Strategy Examples', () => {
         })
     })
 
-    it('Put Option', () => {
+    it('Hedged Call Option With Trades', () => {
+        const input = 'J26 4.50c x3.58 32d TRADES 0.250 (300x)'
+        const out = parseTradeInput(input)
+
+        expect(out).toEqual({
+            exchange: null,
+            expiry: 'J26',
+            expiry2: null,
+            strikes: [4.50],
+            strikes2: null,
+            strategyType: 'Call Option',
+            strategyType2: null,
+            underlying: 3.58,
+            underlying2: null,
+            delta: 32,
+            delta2: null,
+            price: 0.250,
+            lots: 300,
+            isDualStructure: false,
+            isLive: false
+        })
+    })
+
+    it('Live Put Option', () => {
         const input = 'Z25 3.25p LIVE'
         const out = parseTradeInput(input)
 
@@ -98,9 +121,76 @@ describe('parseTradeInput() - Additional Strategy Examples', () => {
             isLive: true
         })
     })
+    it('Live Put Option With Trades', () => {
+        const input = 'Z25 3.25p LIVE TRADES 0.0125 (200x)'
+        const out = parseTradeInput(input)
+
+        expect(out).toEqual({
+            exchange: null,
+            expiry: 'Z25',
+            expiry2: null,
+            strikes: [3.25],
+            strikes2: null,
+            strategyType: 'Put Option',
+            strategyType2: null,
+            underlying: null,
+            underlying2: null,
+            delta: null,
+            delta2: null,
+            price: 0.0125,
+            lots: 200,
+            isDualStructure: false,
+            isLive: true
+        })
+    })
+    it('Hedged Put Option', () => {
+        const input = 'Q25 3.00p x3.25 15d'
+        const out = parseTradeInput(input)
+
+        expect(out).toEqual({
+            exchange: null,
+            expiry: 'Q25',
+            expiry2: null,
+            strikes: [3.00],
+            strikes2: null,
+            strategyType: 'Put Option',
+            strategyType2: null,
+            underlying: 3.25,
+            underlying2: null,
+            delta: 15,
+            delta2: null,
+            price: null,
+            lots: 100,
+            isDualStructure: false,
+            isLive: false
+        })
+    })
+
+    it('Hedged Put Option With Trades', () => {
+        const input = 'Q25 3.00p x3.25 15d TRADES 0.015 (150x)'
+        const out = parseTradeInput(input)
+
+        expect(out).toEqual({
+            exchange: null,
+            expiry: 'Q25',
+            expiry2: null,
+            strikes: [3.00],
+            strikes2: null,
+            strategyType: 'Put Option',
+            strategyType2: null,
+            underlying: 3.25,
+            underlying2: null,
+            delta: 15,
+            delta2: null,
+            price: 0.015,
+            lots: 150,
+            isDualStructure: false,
+            isLive: false
+        })
+    })
 
     // Vertical Spreads
-    it('parses a Vertical Call Spread', () => {
+    it('Live Vertical Call Spread', () => {
         const input = 'Q25 3.65/4.00 cs LIVE'
 
         const out = parseTradeInput(input)
@@ -123,6 +213,8 @@ describe('parseTradeInput() - Additional Strategy Examples', () => {
             isLive: true
         })
     })
+
+
 
     it('parses a Vertical Put Spread', () => {
         const input = 'V25 2.10/2.00 ps LIVE'
@@ -339,28 +431,6 @@ describe('parseTradeInput() - Additional Strategy Examples', () => {
         })
     })
 
-    it('parses a Hedged Call (Call vs Future)', () => {
-        const input = 'Q25 4.25 Call x3.65 28d'
-        const out = parseTradeInput(input)
-
-        expect(out).toEqual({
-            exchange: null,
-            expiry: 'Q25',
-            expiry2: null,
-            strikes: [4.25],
-            strikes2: null,
-            strategyType: 'Call Option',
-            strategyType2: null,
-            underlying: 3.65,
-            underlying2: null,
-            delta: 28,
-            delta2: null,
-            price: null,
-            lots: 100,
-            isDualStructure: false,
-            isLive: false
-        })
-    })
 
     // Three-Way Strategies
     it('parses a 3-Way: Put vs Call Spread', () => {
