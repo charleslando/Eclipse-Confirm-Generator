@@ -275,11 +275,13 @@ const ConfirmGenerator = () => {
                                     title="Leg 1"
                                     leg={trade.leg1}
                                     setLeg={(leg) => setTrade({ ...trade, leg1: leg })}
+                                    trade={trade}
                                 />
                                 <TradeDetailsPanel
                                     title="Leg 2"
                                     leg={trade.leg2}
                                     setLeg={(leg) => setTrade({ ...trade, leg2: leg })}
+                                    trade ={trade}
                                 />
                             </div>
                         ) : (
@@ -287,6 +289,7 @@ const ConfirmGenerator = () => {
                                 title="Trade Details"
                                 leg={trade.leg1}
                                 setLeg={(leg) => setTrade({ ...trade, leg1: leg })}
+                                trade={trade}
                             />
                         )}
 

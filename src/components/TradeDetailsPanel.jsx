@@ -21,7 +21,7 @@ const TradeDetailsPanel = ({
                     <label className="block text-sm font-medium mb-1">Type</label>
                     <select
                         className="w-full p-2 border rounded"
-                        value={leg?.type || ''}
+                        value={leg.type}
                         onChange={e => updateLegField('type', e.target.value)}
                     >
                         <option value="call">Call</option>
@@ -36,7 +36,7 @@ const TradeDetailsPanel = ({
                     <label className="block text-sm font-medium mb-1">Expiry</label>
                     <input
                         className="w-full p-2 border rounded"
-                        value={leg?.expiry || ''}
+                        value={leg.expiry}
                         onChange={e => updateLegField('expiry', e.target.value)}
                     />
                 </div>
@@ -45,11 +45,37 @@ const TradeDetailsPanel = ({
                     <label className="block text-sm font-medium mb-1">Strikes</label>
                     <input
                         className="w-full p-2 border rounded"
-                        value={(leg.strikes).join(', ')}
+                        value={(leg.strikes).join('/')}
+
+                        //i only want to be able to endter numbers and slashes
+                        placeholder="Enter numbers separated by slashes (e.g. 3.5/4)"
+                        onKeyDown={e => {
+                            // Allow control keys
+                            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+                            // Allow navigation and editing keys
+                            const allowedKeys = [
+                                'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+                                'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+                                'Home', 'End'
+                            ];
+
+                            // Check if key is allowed
+                            const isAllowed = allowedKeys.includes(e.key) ||
+                                /^[0-9/.]$/.test(e.key);
+
+                            if (!isAllowed) {
+                                e.preventDefault();
+                            }
+                        }}
                         onChange={e => updateLegField('strikes',
-                            e.target.value.split(',').map(s => s.trim()).filter(s => s)
+                            e.target.value
+                                .split('/')
+                                .map(s => s.trim())
+                                .filter(s => s && !isNaN(parseFloat(s)))
+                                .map(s => parseFloat(s))
                         )}
-                        placeholder="Enter strikes separated by commas"
+
                     />
                 </div>
 
@@ -60,7 +86,7 @@ const TradeDetailsPanel = ({
                             <input
                                 type="number"
                                 className="w-full p-2 border rounded"
-                                value={leg?.delta || ''}
+                                value={leg.delta}
                                 onChange={e => updateLegField('delta',
                                     parseInt(e.target.value, 10) || 0
                                 )}
@@ -72,7 +98,7 @@ const TradeDetailsPanel = ({
                                 type="number"
                                 step="0.01"
                                 className="w-full p-2 border rounded"
-                                value={leg?.underlying || ''}
+                                value={leg.underlying}
                                 onChange={e => updateLegField('underlying',
                                     parseFloat(e.target.value) || 0
                                 )}
