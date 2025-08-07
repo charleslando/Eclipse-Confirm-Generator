@@ -153,7 +153,6 @@ const ConfirmGenerator = () => {
         setOutput(confs.join('\n'));
     };
 
-    const availableStrategies = Object.keys(STRAT_CONFIGS);
 
     return (
         <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow">
@@ -253,7 +252,7 @@ const ConfirmGenerator = () => {
                                 // No need to update legPrices as they're now part of the trade object
                             }}
                         >
-                            {availableStrategies.map(strategy => (
+                            {Object.keys(STRAT_CONFIGS).map(strategy => (
                                 <option key={strategy} value={strategy}>{strategy}</option>
                             ))}
                         </select>
@@ -320,19 +319,25 @@ const ConfirmGenerator = () => {
                                 </label>
                             </div>
 
+                            {(trade.strategyType === 'Vertical Call Spread' || trade.strategyType === 'Vertical Put Spread' ||
+                                trade.strategyType === 'Horizontal Call Spread' || trade.strategyType === 'Horizontal Put Spread' ||
+                                trade.strategyType === 'Diagonal Call Spread' || trade.strategyType === 'Diagonal Put Spread' ||
+                                trade.strategyType === 'Fence' || trade.strategyType === 'Conversion/Reversal') && (
+
                             <div className="mt-2">
                                 <label className="block text-sm font-medium mb-1">Ratio</label>
                                 <select
                                     className="w-full p-2 border rounded"
-                                    value={trade.ratio || ''}
+                                    value={trade.ratio || '1:1'}
                                     onChange={e => setTrade({ ...trade, ratio: e.target.value })}
                                 >
-                                    <option value="">Select Ratio</option>
-                                    <option value="1">1x1</option>
-                                    <option value="2">2x3</option>
-                                    <option value="3">3x1</option>
+                                    <option value="1:1">1x1</option>
+                                    <option value="1:2">1x2</option>
+                                    <option value="1:3">1x3</option>
+                                    <option value="1:1.5">1x1.5</option>
                                 </select>
                             </div>
+                           )}
 
                         </div>
                     </div>

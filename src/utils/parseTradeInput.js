@@ -1,59 +1,101 @@
-// Strategy Configuration
+// Strategy Configuration - Fixed syntax and structure
 const STRAT_CONFIGS = {
     // No-op
-    'Custom':                    { leg1: 'call',           leg2: null },
+    'Custom': { leg1: {type:'call', isBuy:true},
+                leg2: null },
 
     // Single-leg
-    'Call Option':            { leg1: 'call',         leg2: null },
-    'Put Option':             { leg1: 'put',          leg2: null },
-    'Straddle':               { leg1: 'straddle',     leg2: null },
-    'Strangle':               { leg1: 'strangle',     leg2: null },
+    'Call Option': { leg1: {type:'call', isBuy:true},
+                     leg2: null },
+    'Put Option': { leg1: {type:'put', isBuy:true},
+                    leg2: null },
 
-    // Spreads (all one panel)
-    'Vertical Call Spread':   { leg1: 'call',  leg2: 'call' },
-    'Horizontal Call Spread': { leg1: 'call',  leg2: 'call' },
-    'Diagonal Call Spread':   { leg1: 'call',  leg2: 'call' },
-    'Vertical Put Spread':    { leg1: 'put',   leg2: 'put' },
-    'Horizontal Put Spread':  { leg1: 'put',   leg2: 'put' },
-    'Diagonal Put Spread':    { leg1: 'put',   leg2: 'put' },
+    // Two-leg spreads
+    'Vertical Call Spread':   { leg1: {type:'call', isBuy:true},
+                                leg2: {type:'call', isBuy:false}},
+    'Horizontal Call Spread': { leg1: {type:'call', isBuy:false},
+                                leg2: {type:'call', isBuy:true} },
+    'Diagonal Call Spread':   { leg1: {type:'call', isBuy:false},
+                                leg2: {type:'call', isBuy:true} },
+
+    'Vertical Put Spread':    { leg1: {type:'put', isBuy:true},
+                                leg2: {type:'put', isBuy:false} },
+    'Horizontal Put Spread':  { leg1: {type:'put', isBuy:false},
+                                leg2: {type:'put', isBuy:true} },
+    'Diagonal Put Spread':    { leg1: {type:'put', isBuy:false},
+                                leg2: {type:'put', isBuy:true} },
+
+
+    'Straddle': { leg1: {type:'call', isBuy:true},
+                  leg2: {type:'put', isBuy:true} },
+    'Strangle': { leg1: {type:'put', isBuy:true},
+                  leg2: {type:'call', isBuy:true} },
+
 
     // Two-panel "spread of spreads"
-    'Straddle Spread':            { leg1: 'straddle',     leg2: 'straddle' },
-    'Diagonal Straddle Spread':   { leg1: 'straddle',     leg2: 'straddle' },
+    'Straddle Spread':        { leg1: {type:'straddle', isBuy:false},
+                                leg2: {type:'straddle', isBuy:true} },
+    'Diagonal Straddle Spread': {   leg1: {type:'straddle', isBuy:false},
+                                    leg2: {type:'straddle', isBuy:true} },
 
     // Collars / fences
-    'Fence':                 { leg1: 'put',           leg2: 'call' },
+    'Fence': { leg1: {type:'put', isBuy:true},
+               leg2: {type:'call', isBuy:false} },
 
     // Butterflies (one panel)
-    'Call Fly':              { leg1: 'butterfly',     leg2: null },
-    'Put Fly':               { leg1: 'butterfly',     leg2: null },
+    'Call Fly': { leg1: {type:'call fly', isBuy:true},
+                  leg2: null },
+    'Put Fly': { leg1: {type:'put fly', isBuy:true},
+                 leg2: null },
 
     // Conversion / Reversal (dual panel: call vs put)
-    'Conversion/Reversal':   { leg1: 'call',         leg2: 'put' },
+    'Conversion/Reversal': { leg1: {type:'put', isBuy:true},
+                             leg2: {type:'call', isBuy:false} },
 
     // Iron and Condor combos
-    'Iron Butterfly':        { leg1: 'put spread',   leg2: 'call spread' },
-    'Call Condor':           { leg1: 'call spread',  leg2: 'call spread' },
-    'Put Condor':            { leg1: 'put spread',   leg2: 'put spread' },
-    'Iron Condor':           { leg1: 'call spread',  leg2: 'put spread' },
+    'Iron Butterfly': {leg1: { type: 'put spread', isBuy: true },
+                       leg2: { type: 'call spread', isBuy: false }},
+
+    'Call Condor': {leg1: { type: 'call spread', isBuy: true },
+                    leg2: { type: 'call spread', isBuy: false }},
+    'Put Condor': { leg1: { type: 'put spread', isBuy: true },
+                     leg2: { type: 'put spread', isBuy: false }},
+    'Iron Condor': { leg1: { type: 'put spread', isBuy: true },
+                     leg2: { type: 'call spread', isBuy: false }},
 
     // Trees (one panel)
-    'Call Tree':             { leg1: 'call tree',     leg2: null },
-    'Put Tree':              { leg1: 'put tree',      leg2: null },
+    'Call Tree': {leg1: { type: 'call spread', isBuy: true },
+                  leg2: { type: 'call', isBuy: false }},
+    'Put Tree': {leg1: { type: 'put spread', isBuy: true },
+                 leg2: { type: 'put', isBuy: false }},
 
     // 3-Way combos
-    '3-Way: Call Spread v Put':    { leg1: 'call spread',  leg2: 'put' },
-    '3-Way: Put Spread v Call':    { leg1: 'put spread',   leg2: 'call' },
-    '3-Way: Straddle v Call':      { leg1: 'straddle',     leg2: 'call' },
-    '3-Way: Straddle v Put':       { leg1: 'straddle',     leg2: 'put' },
+    '3-Way: Call Spread v Put': {leg1: { type: 'call spread', isBuy: true },
+                                 leg2: { type: 'put', isBuy: false }},
+    '3-Way: Put Spread v Call': {leg1: { type: 'put spread', isBuy: true },
+                                 leg2: { type: 'call', isBuy: false }},
+    '3-Way: Straddle v Call': {leg1: { type: 'straddle', isBuy: true },
+                               leg2: { type: 'call', isBuy: false }},
+    '3-Way: Straddle v Put': {leg1: { type: 'straddle', isBuy: true },
+                              leg2: { type: 'put', isBuy: false }},
 };
+const STRAT_STRIKE_MAP = {
+    'call': 1,
+    'put': 1,
+    'call spread': 2,
+    'put spread': 2,
+    'straddle': 2,
+    'call fly': 3,
+    'put fly': 3,
 
-// Trade Leg Class
+}
+
+// Enhanced Trade Leg Class with better validation
 class TradeLeg {
     constructor(isBuy, type, strikes, price, expiry, underlying, delta) {
         this.isBuy = isBuy;
         this.type = type;
-        this.strikes = strikes || [];
+        this.strikes = Array.isArray(strikes) ? strikes : (strikes ? [strikes] : []);
         this.price = price;
         this.expiry = expiry;
         this.underlying = underlying;
@@ -82,6 +124,7 @@ class TradeParser {
     constructor() {
         this.QUARTER_MAPPING = {
             'FH': '1Q',
+            'FG': 'Jan/Feb',
             'JM': '2Q',
             'NV': '3Q',
             'VZ': '4Q',
@@ -98,53 +141,170 @@ class TradeParser {
         return this.QUARTER_MAPPING[month] ? this.QUARTER_MAPPING[month] + year : match;
     }
 
+
     determineStrategyType(text, strikes, expiry2, strikes2) {
         const lower = text.toLowerCase();
         let strategyType = 'Custom';
 
-        if (lower.includes('call') || lower.includes('c')) {
-            if (strikes.length === 1) {
-                strategyType = 'Call Option';
+        // Check for explicit strategy names first
+        if (lower.includes('iron butterfly') || lower.includes('iron fly')) {
+            return 'Iron Butterfly';
+        }
+        if (lower.includes('iron condor')) {
+            return 'Iron Condor';
+        }
+        if (lower.includes('call condor')) {
+            return 'Call Condor';
+        }
+        if (lower.includes('put condor')) {
+            return 'Put Condor';
+        }
+        if (lower.includes('call tree')) {
+            return 'Call Tree';
+        }
+        if (lower.includes('put tree')) {
+            return 'Put Tree';
+        }
+        if (lower.includes('conversion') || lower.includes('reversal')) {
+            return 'Conversion/Reversal';
+        }
+        if (lower.includes('fence')) {
+            return 'Fence';
+        }
+
+        // Handle "vs" structures for complex strategies
+        if (lower.includes(' vs ') || lower.includes(' vs.')) {
+            return this.determineVsStrategy(text, strikes, expiry2, strikes2);
+        }
+
+        // Single options and basic spreads
+        if (lower.includes('straddle') || lower.includes('strd')) {
+            if (strikes.length === 1 && !expiry2) {
+                return 'Straddle';
+            } else if (strikes.length >= 2 || expiry2) {
+                if (!expiry2) {
+                    return 'Straddle Spread';
+                } else {
+                    return 'Diagonal Straddle Spread';
+                }
+            }
+        }
+
+        if (lower.includes('strangle') || lower.includes('strang')) {
+            return 'Strangle';
+        }
+
+        // Call strategies
+        if (lower.includes('call') || lower.includes('c') || text.match(/\bc /)) {
+            if (strikes.length === 1 && !expiry2) {
+                return 'Call Option';
             } else if (strikes.length === 2) {
                 if (!expiry2) {
-                    strategyType = 'Vertical Call Spread';
+                    return 'Vertical Call Spread';
                 } else if (!strikes2) {
-                    strategyType = 'Horizontal Call Spread';
+                    return 'Horizontal Call Spread';
                 } else {
-                    strategyType = 'Diagonal Call Spread';
+                    return 'Diagonal Call Spread';
                 }
-            } else if (strikes.length > 2) {
-                strategyType = 'Call Fly';
+            } else if (strikes.length >= 3) {
+                return 'Call Fly';
             }
-        } else if (lower.includes('put') || lower.includes('p')) {
-            if (strikes.length === 1) {
-                strategyType = 'Put Option';
+        }
+
+        // Put strategies
+        if (lower.includes('put') || lower.includes('p ') || text.match(/\bp /) ){
+            if (strikes.length === 1 && !expiry2) {
+                return 'Put Option';
             } else if (strikes.length === 2) {
                 if (!expiry2) {
-                    strategyType = 'Vertical Put Spread';
+                    return 'Vertical Put Spread';
                 } else if (!strikes2) {
-                    strategyType = 'Horizontal Put Spread';
+                    return 'Horizontal Put Spread';
                 } else {
-                    strategyType = 'Diagonal Put Spread';
+                    return 'Diagonal Put Spread';
                 }
-            } else if (strikes.length > 2) {
-                strategyType = 'Put Fly';
+            } else if (strikes.length >= 3) {
+                return 'Put Fly';
             }
-        } else if (lower.includes('straddle') || lower.includes('strd')) {
-            if (strikes.length === 1) {
-                strategyType = 'Straddle';
-            } else if (strikes.length > 2) {
-                if (!expiry2) {
-                    strategyType = 'Straddle Spread';
-                } else {
-                    strategyType = 'Diagonal Straddle Spread';
-                }
-            }
-        } else if (lower.includes('strangle') || lower.includes('strang')) {
-            strategyType = 'Strangle';
         }
 
         return strategyType;
+    }
+
+// New helper method for "vs" strategy detection
+    determineVsStrategy(text, strikes, expiry2, strikes2) {
+        const lower = text.toLowerCase();
+        const parts = lower.split(/ vs\.? /);
+
+        if (parts.length !== 2) return 'Custom';
+
+        const leftSide = parts[0].trim();
+        const rightSide = parts[1].trim();
+
+        // Detect spread types on each side
+        const leftType = this.detectSideType(leftSide, strikes);
+        const rightType = this.detectSideType(rightSide, strikes2);
+
+        // Map combinations to strategy types
+        const combinationMap = {
+            'call_spread-put': '3-Way: Call Spread v Put',
+            'put_spread-call': '3-Way: Put Spread v Call',
+            'straddle-call': '3-Way: Straddle v Call',
+            'straddle-put': '3-Way: Straddle v Put',
+            'straddle-straddle': expiry2 ? 'Diagonal Straddle Spread' : 'Straddle Spread',
+            'call_spread-put_spread': 'Iron Condor',
+            'put_spread-call_spread': 'Iron Condor',
+            'call_spread-call_spread': 'Call Condor',
+            'put_spread-put_spread': 'Put Condor',
+            'put-call': 'Conversion/Reversal',
+            'call-put': 'Conversion/Reversal'
+        };
+
+        const key = `${leftType}-${rightType}`;
+        return combinationMap[key] || 'Custom';
+    }
+
+// Helper method to detect what type of strategy is on each side of "vs"
+    detectSideType(sideText, sideStrikes) {
+        const side = sideText.trim();
+
+        // Check for explicit spread indicators
+        if (side.includes('cs') || side.includes('call spread') ||
+            (side.includes('call') && sideStrikes && sideStrikes.length >= 2)) {
+            //console.log('Detected call spread:', side);
+            return 'call_spread';
+        }
+
+        if (side.includes('ps') || side.includes('put spread') ||
+            (side.includes('put') && sideStrikes && sideStrikes.length >= 2)) {
+            //console.log('Detected put spread:', side);
+            return 'put_spread';
+        }
+
+        if (side.includes('straddle') || side.includes('strd')) {
+            return 'straddle';
+        }
+
+        if (side.includes('strangle') || side.includes('strang')) {
+            return 'strangle';
+        }
+
+        // Single options
+        if (side.includes('call') || side.includes('c') || side.match(/\bc\d/)) {
+            return 'call';
+        }
+
+        if (side.includes('put') || side.includes('p') || side.match(/\bp\d/)) {
+            return 'put';
+        }
+
+        // Check for fly indicators
+        if (side.includes('fly') || (sideStrikes && sideStrikes.length >= 3)) {
+            if (side.includes('call')) return 'call_fly';
+            if (side.includes('put')) return 'put_fly';
+        }
+
+        return 'unknown';
     }
 
     parse(rawInput) {
@@ -211,8 +371,7 @@ class TradeParser {
         // Strategy type
         const strategyType = this.determineStrategyType(raw, strikes, expiry2, strikes2);
 
-        // Ratio  (eg. "1.5x2" or "1x2")
-
+        // Ratio (eg. "1.5x2" or "1x2")
         const ratio = tokens.find(t => /^[1-9]\d*(?:\.\d+)?x\d+$/.test(t));
 
         return {
@@ -235,7 +394,7 @@ class TradeParser {
     }
 }
 
-// Main Trade Class
+// Main Trade Class with improvements
 class Trade {
     constructor(rawInput) {
         this.rawInput = rawInput;
@@ -243,24 +402,25 @@ class Trade {
         this.parsedData = parser.parse(rawInput);
 
         this.strategyType = this.parsedData.strategyType;
-        this.exchange = this.parsedData.exchange;
+        this.exchange = this.parsedData.exchange || 'CME';
         this.isLive = this.parsedData.isLive;
         this.ratio = this.parsedData.ratio;
-
+        this.lots = this.parsedData.lots; // Fixed: was missing assignment
 
         this.leg1 = this.createLeg1();
         this.leg2 = this.createLeg2();
 
         this.buyers = [];
         this.sellers = [];
-
-
     }
 
     createLeg1() {
+        const config = STRAT_CONFIGS[this.strategyType];
+        if (!config || !config.leg1) return null;
+
         return new TradeLeg(
-            true, // isBuy - you might want to infer this from input
-            STRAT_CONFIGS[this.strategyType].leg1,
+            config.isBuy !== undefined ? config.isBuy : true, // Use config's isBuy if available
+            config.leg1.type,
             this.parsedData.strikes,
             this.parsedData.price,
             this.parsedData.expiry,
@@ -270,12 +430,14 @@ class Trade {
     }
 
     createLeg2() {
-        if (!STRAT_CONFIGS[this.strategyType].leg2) {
+        const config = STRAT_CONFIGS[this.strategyType];
+        if (!config || !config.leg2) {
             return null; // No second leg for this strategy
         }
+
         return new TradeLeg(
-            false, // isBuy - opposite of leg1, or infer from input
-            STRAT_CONFIGS[this.strategyType].leg2,
+            config.leg2.isBuy !== undefined ? config.leg2.isBuy : false,
+            config.leg2.type,
             this.parsedData.strikes2 || this.parsedData.strikes,
             this.parsedData.price,
             this.parsedData.expiry2 || this.parsedData.expiry,
@@ -318,10 +480,8 @@ class Trade {
     }
 
     getStrategyConfig() {
-        return this.strategyConfig;
+        return STRAT_CONFIGS[this.strategyType];
     }
-
-
 
     // Setters for updating object
     updateLeg(legIndex, property, value) {
@@ -331,35 +491,42 @@ class Trade {
             this.leg2[property] = value;
         }
     }
+
     setLive(isLive) {
         this.isLive = isLive;
     }
+
     setRatio(ratio) {
         this.ratio = ratio;
     }
+
     setLots(lots) {
         this.lots = lots;
     }
+
     setExchange(exchange) {
         this.exchange = exchange;
     }
-    // Updated setStrategyType method for your Trade class
-    setStrategyType(strategyType) {
-        this.strategyType = strategyType;
 
-        // Get the new strategy configuration
+    // Updated setStrategyType method
+    setStrategyType(strategyType) {
+        if (!STRAT_CONFIGS[strategyType]) {
+            console.log(`Unknown strategy type: ${strategyType}`);
+        }
+
+        this.strategyType = strategyType;
         const config = STRAT_CONFIGS[strategyType];
 
         // Recreate leg1 based on new strategy
         if (config.leg1) {
             this.leg1 = new TradeLeg(
-                true, // isBuy - you might want to preserve this from existing leg
-                config.leg1,
-                this.leg1?.strikes || [''],
-                this.leg1?.price || null,
-                this.leg1?.expiry || '',
-                this.leg1?.underlying || null,
-                this.leg1?.delta || null
+                config.leg1.isBuy !== undefined ? config.leg1.isBuy : true,
+                config.leg1.type,
+                // this.leg1.strikes,
+                // this.leg1.price,
+                // this.leg1.expiry,
+                // this.leg1.underlying,
+                // this.leg1.delta
             );
         } else {
             this.leg1 = null;
@@ -368,19 +535,18 @@ class Trade {
         // Recreate leg2 based on new strategy
         if (config.leg2) {
             this.leg2 = new TradeLeg(
-                false, // isBuy - opposite of leg1, or preserve from existing
-                config.leg2,
-                this.leg2?.strikes || [''],
-                this.leg2?.price || null,
-                this.leg2?.expiry || '',
-                this.leg2?.underlying || null,
-                this.leg2?.delta || null
+                config.leg2.isBuy !== undefined ? config.leg2.isBuy : false,
+                config.leg2.type,
+                // this.leg2.strikes || [],
+                // this.leg2.price,
+                // this.leg2.expiry,
+                // this.leg2.underlying,
+                // this.leg2.delta
             );
         } else {
             this.leg2 = null;
         }
     }
-
 }
 
 // Factory function to create trades (main export)
@@ -389,4 +555,4 @@ export function breakdownTrade(input) {
 }
 
 // Export classes for advanced usage
-export { Trade, TradeLeg, STRAT_CONFIGS };
+export { Trade, TradeLeg, STRAT_CONFIGS, STRAT_STRIKE_MAP };

@@ -2,7 +2,9 @@
 import { parseTradeInput } from './parseTradeInput'
 import { describe, it, expect } from 'vitest'
 
-
+//bugs
+//V25 2.25/1.85 1x2 ps
+//V25 3.00/2.50/2.25 put fly (2x) vs 4.00c x3.15 48d
 
 describe('parseTradeInput() - Additional Strategy Examples', () => {
 

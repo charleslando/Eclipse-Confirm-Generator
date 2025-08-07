@@ -1,4 +1,6 @@
 import React from "react";
+import { startCase } from "lodash";
+import {STRAT_STRIKE_MAP} from "../utils/parseTradeInput.js";
 
 const TradeDetailsPanel = ({
                                title,
@@ -24,12 +26,9 @@ const TradeDetailsPanel = ({
                         value={leg.type}
                         onChange={e => updateLegField('type', e.target.value)}
                     >
-                        <option value="call">Call</option>
-                        <option value="put">Put</option>
-                        <option value="call spread">Call Spread</option>
-                        <option value="put spread">Put Spread</option>
-                        <option value="straddle">Straddle</option>
-                        <option value="strangle">Strangle</option>
+                        {Object.keys(STRAT_STRIKE_MAP).map(type => (
+                            <option key={type} value={type}>{startCase(type)}</option>
+                        ))}
                     </select>
                 </div>
                 <div>
@@ -75,7 +74,6 @@ const TradeDetailsPanel = ({
                                 .filter(s => s && !isNaN(parseFloat(s)))
                                 .map(s => parseFloat(s))
                         )}
-
                     />
                 </div>
 
