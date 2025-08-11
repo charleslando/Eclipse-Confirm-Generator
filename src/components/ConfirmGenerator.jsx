@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { FileText } from 'lucide-react';
-import {breakdownTrade, Trade, TradeParser} from '../utils/parseTradeInput';
+import EclipseLogo from '../assets/EclipseLogo.jpg';
+import {TradeParser} from '../utils/TradeParser';
+import {breakdownTrade, calculatePrice, Trade} from '../utils/parseTradeInput';
 import { generateTradeLines } from '../utils/generateTradeLines';
 import LegPricesSection from './LegPricesSection';
 import CounterpartySection from './CounterpartySection';
 import OutputSection from './OutputSection';
 import TradeDetailsPanel from './TradeDetailsPanel';
-import { STRAT_CONFIGS } from "../utils/parseTradeInput";
+import { STRAT_CONFIGS, STRAT_STRIKE_MAP } from "../utils/parseTradeInput";
 
 
 
@@ -23,8 +24,31 @@ const ConfirmGenerator = () => {
     const [feedback, setFeedback] = useState(null);
     const [timeStamp, setTimestamp] = useState(new Date().toLocaleTimeString());
 
+    function isFiniteNum(v) { return typeof v === 'number' && Number.isFinite(v); }
+
+    function requiredStrikeCount(leg) {
+        return STRAT_STRIKE_MAP[leg?.type] || (leg?.strikes?.length ?? 0) || 0;
+    }
+
+    function hasAllPricesForLeg(leg) {
+        if (!leg) return true;
+        const need = requiredStrikeCount(leg);
+        const arr = leg?.prices || [];
+        for (let i = 0; i < need; i++) {
+            if (!isFiniteNum(arr[i])) return false;
+        }
+        return true;
+    }
+
+    function hasAllPrices(trade) {
+        if (!trade) return false;
+        return hasAllPricesForLeg(trade.leg1) && hasAllPricesForLeg(trade.leg2);
+    }
+
+
     const clearInput = () => {
         setTradeInput('');
+        setParsedData(null);
         setTrade(null);
         setCounterparties({ buyers: [], sellers: [] });
         setOutput('');
@@ -61,10 +85,11 @@ const ConfirmGenerator = () => {
     };
 
     const BuildStructure = () => {
-        // Create a new Trade instance for single structure
-        const newTrade = breakdownTrade("-");
-        setTrade(newTrade);
-        setFeedback({ type: 'success', message: 'Single structure initialized!' });
+
+            // Create a new Trade instance for single structure
+            const newTrade = new Trade("Custom"); // Pass a valid strategy type
+            setTrade(newTrade);
+            setFeedback({ type: 'success', message: 'Single structure initialized!' });
     };
 
     function extracted(strategyType) {
@@ -72,35 +97,107 @@ const ConfirmGenerator = () => {
         const newTrade = new Trade(strategyType);
 
         // Copy over the current data
-        //newTrade.parsedData = trade.parsedData;
         newTrade.exchange = trade.exchange;
         newTrade.isLive = trade.isLive;
         newTrade.ratio = trade.ratio;
 
-        // Set the new strategy type which will recreate legs
-        //newTrade.setStrategyType(e.target.value);
-        //newTrade.strategyType = strategyType;
-
-        // Copy over existing leg data if it exists
+        // Copy over existing leg data if it exists, but preserve the new array sizes
         if (trade.leg1 && newTrade.leg1) {
-            newTrade.leg1.strikes = trade.leg1.strikes || parsedData.strikes1; //TODO dont replace array rather fill
-            newTrade.leg1.expiry = trade.leg1.expiry || parsedData.expiry1;
-            newTrade.leg1.underlying = trade.leg1.underlying || parsedData.underlying1;
-            newTrade.leg1.delta = trade.leg1.delta || parsedData.delta1;
-            newTrade.leg1.prices = trade.leg1.prices || parsedData.price1;
+            const requiredStrikes1 = STRAT_STRIKE_MAP[newTrade.leg1.type] || 1;
+
+            // Copy strikes up to the required length, fall back to parsedData if needed
+            for (let i = 0; i < requiredStrikes1; i++) {
+                if (trade.leg1.strikes && i < trade.leg1.strikes.length && trade.leg1.strikes[i] !== 0) {
+                    newTrade.leg1.strikes[i] = trade.leg1.strikes[i];
+                } else if (parsedData?.strikes && i < parsedData.strikes.length) {
+                    newTrade.leg1.strikes[i] = parsedData.strikes[i];
+                }
+
+                if (trade.leg1.prices && i < trade.leg1.prices.length) {
+                    newTrade.leg1.prices[i] = trade.leg1.prices[i];
+                }
+            }
+
+            newTrade.leg1.expiry = trade.leg1.expiry || parsedData?.expiry || '';
+            newTrade.leg1.underlying = trade.leg1.underlying || parsedData?.underlying || 0;
+            newTrade.leg1.delta = trade.leg1.delta || parsedData?.delta || 0;
         }
+
         if (trade.leg2 && newTrade.leg2) {
-            newTrade.leg2.strikes = trade.leg2.strikes || parsedData.strikes2; //TODO
-            newTrade.leg2.expiry = trade.leg2.expiry || parsedData.expiry2;
-            newTrade.leg2.underlying = trade.leg2.underlying || parsedData.underlying2;
-            newTrade.leg2.delta = trade.leg2.delta || parsedData.delta2;
-            newTrade.leg2.prices = trade.leg2.prices || parsedData.price2;
+            const requiredStrikes2 = STRAT_STRIKE_MAP[newTrade.leg2.type] || 1;
+
+            // Copy strikes up to the required length, fall back to parsedData if needed
+            for (let i = 0; i < requiredStrikes2; i++) {
+                if (trade.leg2.strikes && i < trade.leg2.strikes.length && trade.leg2.strikes[i] !== 0) {
+                    newTrade.leg2.strikes[i] = trade.leg2.strikes[i];
+                } else if (parsedData?.strikes2 && i < parsedData.strikes2.length) {
+                    newTrade.leg2.strikes[i] = parsedData.strikes2[i];
+                }
+
+                if (trade.leg2.prices && i < trade.leg2.prices.length) {
+                    newTrade.leg2.prices[i] = trade.leg2.prices[i];
+                }
+            }
+
+            newTrade.leg2.expiry = trade.leg2.expiry || parsedData?.expiry2 || '';
+            newTrade.leg2.underlying = trade.leg2.underlying || parsedData?.underlying2 || 0;
+            newTrade.leg2.delta = trade.leg2.delta || parsedData?.delta2 || 0;
         }
 
         setTrade(newTrade);
-
-        // No need to update legPrices as they're now part of the trade object
     }
+    // function swapLegs() {
+    //     if (!trade || !trade.leg1 || !trade.leg2) {
+    //         setFeedback({ type: 'error', message: 'Both legs must be defined to swap.' });
+    //         return;
+    //     }
+    //
+    //     const temp = trade.leg1;
+    //     temp.isBuy = !trade.leg1.isBuy; // Swap buy/sell status
+    //     trade.leg2.isBuy = !trade.leg2.isBuy; // Swap buy/sell status
+    //     setTrade({
+    //         ...trade,
+    //         leg1: trade.leg2,
+    //         leg2: temp
+    //     });
+    //
+    //     setFeedback({ type: 'success', message: 'Legs swapped successfully!' });
+    // }
+    function swapLegDetails() {
+        if (!trade || !trade.leg1 || !trade.leg2) {
+            setFeedback({ type: 'error', message: 'Both legs must exist to swap details.' });
+            return;
+        }
+
+        if (!hasAllPrices(trade)) {
+            setFeedback({ type: 'error', message: 'Finish entering all required prices before swapping.' });
+            return;
+        }
+
+        // Deep-ish clone (adjust if you have nested objects beyond arrays/primitives)
+        const leg1Copy = {
+            ...trade.leg1,
+            strikes: [...(trade.leg1.strikes || [])],
+            prices:  [...(trade.leg1.prices  || [])],
+            isBuy: !trade.leg1.isBuy
+        };
+        const leg2Copy = {
+            ...trade.leg2,
+            strikes: [...(trade.leg2.strikes || [])],
+            prices:  [...(trade.leg2.prices  || [])],
+            isBuy: !trade.leg2.isBuy
+        };
+
+        // Swap ALL details: type, isBuy, expiry, strikes, prices, underlying, delta, etc.
+        setTrade({
+            ...trade,
+            leg1: leg2Copy,
+            leg2: leg1Copy,
+        });
+
+        setFeedback({ type: 'success', message: 'Leg details swapped (panels unchanged).' });
+    }
+
 
 
     const handleParse = () => {
@@ -128,6 +225,7 @@ const ConfirmGenerator = () => {
 
         } catch (err) {
             setFeedback({ type: 'error', message: `Parsing failed: ${err.message}` });
+            console.log("this is happening", err);
             clearInput();
         }
     };
@@ -161,7 +259,8 @@ const ConfirmGenerator = () => {
         <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow">
             {/*CONFIRM INPUT*/}
             <h1 className="text-2xl font-bold mb-4 flex items-center">
-                <FileText className="mr-2" />Eclipse Confirmation Generator
+                <img src={EclipseLogo} alt="Eclipse" className="mr-10 h-32 w-32" />
+                Eclipse Confirmation Generator
             </h1>
 
             <textarea
@@ -236,25 +335,92 @@ const ConfirmGenerator = () => {
                             ))}
                         </select>
                     </div>
+                    {/*TRADE TYPE*/}
+                    <div className="mt-4 bg-gray-50 p-4 rounded">
+                        <label className="block text-sm font-medium mb-1">Trade Type</label>
+                        <div className="flex gap-4">
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="tradeType"
+                                    value="Live"
+                                    checked={trade.isLive}
+                                    onChange={() => setTrade({ ...trade, isLive: true })}
+                                    className="mr-1"
+                                />
+                                Live
+                            </label>
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="tradeType"
+                                    value="Hedged"
+                                    checked={!trade.isLive}
+                                    onChange={() => setTrade({ ...trade, isLive: false })}
+                                    className="mr-1"
+                                />
+                                Hedged
+                            </label>
+                        </div>
+
+                        {(trade.strategyType === 'Vertical Call Spread' || trade.strategyType === 'Vertical Put Spread' ||
+                            trade.strategyType === 'Horizontal Call Spread' || trade.strategyType === 'Horizontal Put Spread' ||
+                            trade.strategyType === 'Diagonal Call Spread' || trade.strategyType === 'Diagonal Put Spread' ||
+                            trade.strategyType === 'Fence' || trade.strategyType === 'Conversion/Reversal') && (
+
+
+                            <div className="mt-2">
+                                <label className="block text-sm font-medium mb-1">Ratio</label>
+                                <div className="flex gap-2">
+                                    {['1x1', '1x2', '1x3', '1x1.5'].map(ratio => (
+                                        <button
+                                            key={ratio}
+                                            className={`px-3 py-1 rounded ${
+                                                (trade.ratio || '1x1')  === ratio
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'bg-gray-100 hover:bg-gray-200'
+                                            }`}
+                                            onClick={() => setTrade({ ...trade, ratio: ratio })}
+                                        >
+                                            {ratio}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
 
                     {/*LEG PANELS*/}
                     <div className="mt-6 bg-white p-4 rounded">
-
-
                         {/* Trade Details Panels */}
                         {trade.leg2 ? (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Premium wrapper for first panel */}
+                                <div className="bg-black rounded-lg p-1">
+                                    <div className="bg-yellow-400 text-black text-xs font-bold text-center py-1 rounded-t-md mb-1">
+                                        PREMIUM
+                                    </div>
+                                    <div className="bg-white rounded-b-md">
+                                        <TradeDetailsPanel
+                                            leg={trade.leg1}
+                                            setLeg={(leg) => setTrade({ ...trade, leg1: leg })}
+                                            trade={trade}
+                                        />
+                                    </div>
+                                </div>
 
-                                <TradeDetailsPanel
-                                    leg={trade.leg1}
-                                    setLeg={(leg) => setTrade({ ...trade, leg1: leg })}
-                                    trade={trade}
-                                />
-                                <TradeDetailsPanel
-                                    leg={trade.leg2}
-                                    setLeg={(leg) => setTrade({ ...trade, leg2: leg })}
-                                    trade ={trade}
-                                />
+                                {/* Regular second panel with spacer to match height */}
+                                <div>
+                                    <div className="text-xs font-bold text-center py-1 mb-1 invisible">
+                                        SPACER
+                                    </div>
+                                    <TradeDetailsPanel
+                                        leg={trade.leg2}
+                                        setLeg={(leg) => setTrade({ ...trade, leg2: leg })}
+                                        trade={trade}
+                                    />
+                                </div>
                             </div>
                         ) : (
                             <TradeDetailsPanel
@@ -266,56 +432,7 @@ const ConfirmGenerator = () => {
                         )}
 
 
-                        {/*TRADE TYPE*/}
-                        <div className="mt-4">
-                            <label className="block text-sm font-medium mb-1">Trade Type</label>
-                            <div className="flex gap-4">
-                                <label className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        name="tradeType"
-                                        value="Live"
-                                        checked={trade.isLive}
-                                        onChange={() => setTrade({ ...trade, isLive: true })}
-                                        className="mr-1"
-                                    />
-                                    Live
-                                </label>
-                                <label className="flex items-center">
-                                    <input
-                                        type="radio"
-                                        name="tradeType"
-                                        value="Hedged"
-                                        checked={!trade.isLive}
-                                        onChange={() => setTrade({ ...trade, isLive: false })}
-                                        className="mr-1"
-                                    />
-                                    Hedged
-                                </label>
-                            </div>
 
-                            {(trade.strategyType === 'Vertical Call Spread' || trade.strategyType === 'Vertical Put Spread' ||
-                                trade.strategyType === 'Horizontal Call Spread' || trade.strategyType === 'Horizontal Put Spread' ||
-                                trade.strategyType === 'Diagonal Call Spread' || trade.strategyType === 'Diagonal Put Spread' ||
-                                trade.strategyType === 'Fence' || trade.strategyType === 'Conversion/Reversal') && (
-
-
-                            <div className="mt-2">
-                                <label className="block text-sm font-medium mb-1">Ratio</label>
-                                <select
-                                    className="w-full p-2 border rounded"
-                                    value={trade.ratio || '1:1'}
-                                    onChange={e => setTrade({ ...trade, ratio: e.target.value })}
-                                >
-                                    <option value="1:1">1x1</option>
-                                    <option value="1:2">1x2</option>
-                                    <option value="1:3">1x3</option>
-                                    <option value="1:1.5">1x1.5</option>
-                                </select>
-                            </div>
-                           )}
-
-                        </div>
                     </div>
 
                     {/*LEG PRICES*/}
@@ -344,34 +461,37 @@ const ConfirmGenerator = () => {
 
                     {/*SUMMARY SECTION*/}
                     {/* Summary Section */}
-                    <div className="mt-4 pt-4 border-t">
-                        <div className="grid grid-cols-3 gap-4">
-                            <div className="flex flex-col">
-                                <span className="font-bold text-sm">Total Price:</span>
-                                <span className="text-lg">
-                            {0}
-                        </span>
-                            </div>
+                    <div className="flex flex-col">
+                        <span className="font-bold text-sm">Total Price:</span>
+                        {(() => {
+                            const total = calculatePrice(trade.leg1) + (trade.leg2 ? calculatePrice(trade.leg2) : 0);
+                            const needsSwap = total < 0 && !!trade.leg2;
 
-                            <div className="flex flex-col">
-                                <span className="font-bold text-sm">Average Premium:</span>
-                                <span className="text-lg">
-                            {0}
-                        </span>
-                            </div>
-
-                            <div className="flex flex-col">
-                                <span className="font-bold text-sm">Timestamp:</span>
-                                <input
-                                    type="text"
-                                    className="border rounded p-1 text-sm"
-                                    value={timeStamp}
-                                    onChange={e => setTimestamp(e.target.value)}
-                                    placeholder="HH:MM:SS"
-                                />
-                            </div>
-                        </div>
+                            return (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-lg">{(total)}</span>
+                                    {needsSwap && (
+                                        <div className="flex items-center gap-2">
+            <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+              Net negative — consider swapping legs
+            </span>
+                                            <button
+                                                className={`text-xs px-2 py-1 rounded ${
+                                                    hasAllPrices(trade) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                }`}
+                                                onClick={swapLegDetails}
+                                                disabled={!hasAllPrices(trade)}
+                                                title={!hasAllPrices(trade) ? 'Enter all prices first' : 'Swap all leg details (panels stay)'}
+                                            >
+                                                Swap Details
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
                     </div>
+
 
                     <div className="mt-6 space-y-4">
                         <CounterpartySection
@@ -395,6 +515,8 @@ const ConfirmGenerator = () => {
                         <div className="bg-gray-100 p-3 rounded text-xs">
                             <strong>Trade Data:</strong>
                             <pre>{JSON.stringify(trade, null, 2)}</pre>
+                            <strong>Parsed Data:</strong>
+                            <pre>{JSON.stringify(parsedData, null, 2)}</pre>
                         </div>
                     </div>
                 </>

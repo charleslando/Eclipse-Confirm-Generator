@@ -14,6 +14,41 @@ const TradeDetailsPanel = ({
         });
     };
 
+    const updateLegType = (newType) => {
+        // Create a new leg object and use its updateType method
+        //const updatedLeg = { ...leg };
+
+        // Manually implement the type update logic since we're working with plain objects
+        const requiredStrikes = STRAT_STRIKE_MAP[newType] || 1;
+        const currentStrikes = leg.strikes || [];
+        const currentPrices = leg.prices || [];
+
+        // Create new arrays with proper length
+        const newStrikes = new Array(requiredStrikes).fill(0);
+        const newPrices = new Array(requiredStrikes).fill(0);
+
+        // Copy existing values up to the minimum of old and new lengths
+        const copyLength = Math.min(currentStrikes.length, requiredStrikes);
+        for (let i = 0; i < copyLength; i++) {
+            newStrikes[i] = currentStrikes[i];
+            newPrices[i] = currentPrices[i];
+        }
+
+        // Update the leg with new type, strikes, and prices
+        setLeg({
+            ...leg,
+            type: newType,
+            strikes: newStrikes,
+            prices: newPrices
+        });
+    };
+
+    const updateStrike = (index, value) => {
+        const newStrikes = [...leg.strikes];
+        newStrikes[index] = parseFloat(value) || 0;
+        updateLegField('strikes', newStrikes);
+    };
+
     const color = leg.isBuy? "green":"red";
     const title = leg.isBuy ? 'Buy' : 'Sell';
 
@@ -27,7 +62,7 @@ const TradeDetailsPanel = ({
                     <select
                         className="w-full p-2 border rounded"
                         value={leg.type}
-                        onChange={e => updateLegField('type', e.target.value)}
+                        onChange={e => updateLegType(e.target.value)}
                     >
                         {Object.keys(STRAT_STRIKE_MAP).map(type => (
                             <option key={type} value={type}>{startCase(type)}</option>
@@ -45,39 +80,22 @@ const TradeDetailsPanel = ({
 
                 <div>
                     <label className="block text-sm font-medium mb-1">Strikes</label>
-                    <input
-                        className="w-full p-2 border rounded"
-                        value={(leg.strikes).join('/')}
-
-                        //i only want to be able to endter numbers and slashes
-                        placeholder="Enter numbers separated by slashes (e.g. 3.5/4)"
-                        onKeyDown={e => {
-                            // Allow control keys
-                            if (e.ctrlKey || e.metaKey || e.altKey) return;
-
-                            // Allow navigation and editing keys
-                            const allowedKeys = [
-                                'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
-                                'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-                                'Home', 'End'
-                            ];
-
-                            // Check if key is allowed
-                            const isAllowed = allowedKeys.includes(e.key) ||
-                                /^[0-9/.]$/.test(e.key);
-
-                            if (!isAllowed) {
-                                e.preventDefault();
-                            }
-                        }}
-                        onChange={e => updateLegField('strikes',
-                            e.target.value
-                                .split('/')
-                                .map(s => s.trim())
-                                .filter(s => s && !isNaN(parseFloat(s)))
-                                .map(s => parseFloat(s))
-                        )}
-                    />
+                    <div className="space-y-2">
+                        {leg.strikes.map((strike, index) => (
+                            <div key={index}>
+                                <label className="block text-xs text-gray-600 mb-1">
+                                    Strike {index + 1}
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    className="w-full p-2 border rounded"
+                                    value={strike}
+                                    onChange={e => updateStrike(index, e.target.value)}
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {trade && !trade.isLive && (

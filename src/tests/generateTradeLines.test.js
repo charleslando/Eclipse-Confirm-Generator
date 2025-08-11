@@ -1,4 +1,4 @@
-import { generateTradeLines } from './generateTradeLines.js'
+import { generateTradeLines } from '../utils/generateTradeLines.js'
 import { describe, it, expect } from 'vitest'
 
 describe('generateTradeInput()', () => {
