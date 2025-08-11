@@ -92,18 +92,26 @@ const STRAT_STRIKE_MAP = {
 
 // Enhanced Trade Leg Class with better validation
 class TradeLeg {
-    constructor(isBuy, type, strikes, price, expiry, underlying, delta) {
+    constructor(type, isBuy){
+
         this.isBuy = isBuy;
         this.type = type;
-        this.strikes = Array.isArray(strikes) ? strikes : (strikes ? [strikes] : []);
-        this.price = price;
-        this.expiry = expiry;
-        this.underlying = underlying;
-        this.delta = delta;
+
+        this.strikes = new Array(STRAT_STRIKE_MAP[type]).fill(0);
+        this.prices = new Array(STRAT_STRIKE_MAP[type]).fill(0);
+        this.expiry = '';
+        this.underlying = 0;
+        this.delta = 0;
+
+        // this.strikes = Array.isArray(strikes) ? strikes : (strikes ? [strikes] : []);
+        // this.price = price;
+        // this.expiry = expiry;
+        // this.underlying = underlying;
+        // this.delta = delta;
     }
 
-    getPrice() {
-        return this.price;
+    getPrices() {
+        return this.prices;
     }
 
     generateConfirm() {
@@ -116,6 +124,60 @@ class TradeLeg {
         const action = this.isBuy ? 'Long' : 'Short';
         const strikeStr = this.strikes.length > 0 ? ` @ ${this.strikes.join('/')}` : '';
         return `${action} ${this.type}${strikeStr}`;
+    }
+
+    calculatePrice() {
+        const prices = this.prices;
+        if(!prices || prices.length === 0) return 0;
+        switch(this.type) {
+            case 'call':
+            case 'put': {
+                let price = 0;
+                let multiplier = this.isBuy ? -1 : 1;
+                for (let i = 0; i < prices.length; i++) {
+                    price += parseFloat(prices[i]) || 0;
+                }
+                return price * multiplier;
+            }
+
+            case 'call fly':
+            case 'put fly': {
+                let flyPrice = 0;
+                // Fly: buy-sell-buy or sell-buy-sell pattern
+                const flyMultipliers = this.isBuy ? [-1, 1, -1] : [1, -1, 1];
+                for (let i = 0; i < 3; i++) {
+                    const strikePrice = parseFloat(prices[i]) || 0;
+                    const mult = flyMultipliers[i] || 0;
+                    flyPrice += strikePrice * mult;
+                }
+                return flyPrice;
+            }
+
+            case 'straddle': {
+                let straddlePrice = 0;
+                let straddleMultiplier = this.isBuy ? -1 : 1;
+                for (let i = 0; i < prices.length; i++) {
+                    straddlePrice += parseFloat(prices[i]) || 0;
+                }
+                return straddlePrice * straddleMultiplier;
+            }
+
+            case 'call spread':
+            case 'put spread': {
+                let spreadPrice = 0;
+                // Spread: buy-sell or sell-buy pattern
+                const spreadMultipliers = this.isBuy ? [-1, 1] : [1, -1];
+                for (let i = 0; i < 2; i++) {
+                    const strikePrice = parseFloat(prices[i]) || 0;
+                    const mult = spreadMultipliers[i] || 0;
+                    spreadPrice += strikePrice * mult;
+                }
+                return spreadPrice;
+            }
+
+            default:
+                return 0;
+        }
     }
 }
 
@@ -396,55 +458,76 @@ class TradeParser {
 
 // Main Trade Class with improvements
 class Trade {
-    constructor(rawInput) {
-        this.rawInput = rawInput;
-        let parser = new TradeParser();
-        this.parsedData = parser.parse(rawInput);
+    constructor(strategyType) {
+        this.strategyType = strategyType;
 
-        this.strategyType = this.parsedData.strategyType;
-        this.exchange = this.parsedData.exchange || 'CME';
-        this.isLive = this.parsedData.isLive;
-        this.ratio = this.parsedData.ratio;
-        this.lots = this.parsedData.lots; // Fixed: was missing assignment
+        //this.strategyType = this.parsedData.strategyType;
 
-        this.leg1 = this.createLeg1();
-        this.leg2 = this.createLeg2();
+        //this.rawInput = rawInput;
+        //let parser = new TradeParser();
+        //this.parsedData = parser.parse(rawInput);
+
+
+        this.exchange = 'CME';// = this.parsedData.exchange || 'CME';
+        this.isLive = false; // = this.parsedData.isLive;
+        this.ratio = ''; // = this.parsedData.ratio;
+        //this.lots = this.parsedData.lots; // Fixed: was missing assignment
+
+        this.lots = 100; // Default to 1 lot if not specified
+
+        const leg1Type = STRAT_CONFIGS[this.strategyType].leg1.type;
+        const leg1Buy = STRAT_CONFIGS[this.strategyType].leg1.isBuy;
+
+        if(leg2Type) {
+            const leg2Type = STRAT_CONFIGS[this.strategyType].leg2.type;
+            const leg2Buy = STRAT_CONFIGS[this.strategyType].leg2.isBuy;
+            this.leg2 = new TradeLeg(leg2Type, leg2Buy);
+        }
+
+
+
+
+        // this.leg1 = this.createLeg1(leg1Type, leg1Buy);
+        // this.leg2 = this.createLeg2(leg2Type, leg1Buy);
+
+        this.leg1 = new TradeLeg(leg1Type, leg1Buy);
+
 
         this.buyers = [];
         this.sellers = [];
     }
 
-    createLeg1() {
-        const config = STRAT_CONFIGS[this.strategyType];
-        if (!config || !config.leg1) return null;
+    // createLeg1() {
+    //     const config = STRAT_CONFIGS[this.strategyType];
+    //     if (!config || !config.leg1) return null;
+    //
+    //     return new TradeLeg(
+    //         config.isBuy !== undefined ? config.isBuy : true, // Use config's isBuy if available
+    //         config.leg1.type,
+    //         this.parsedData.strikes,
+    //         this.parsedData.price,
+    //         this.parsedData.expiry,
+    //         this.parsedData.underlying,
+    //         this.parsedData.delta
+    //     );
+    //}
 
-        return new TradeLeg(
-            config.isBuy !== undefined ? config.isBuy : true, // Use config's isBuy if available
-            config.leg1.type,
-            this.parsedData.strikes,
-            this.parsedData.price,
-            this.parsedData.expiry,
-            this.parsedData.underlying,
-            this.parsedData.delta
-        );
-    }
-
-    createLeg2() {
-        const config = STRAT_CONFIGS[this.strategyType];
-        if (!config || !config.leg2) {
-            return null; // No second leg for this strategy
-        }
-
-        return new TradeLeg(
-            config.leg2.isBuy !== undefined ? config.leg2.isBuy : false,
-            config.leg2.type,
-            this.parsedData.strikes2 || this.parsedData.strikes,
-            this.parsedData.price,
-            this.parsedData.expiry2 || this.parsedData.expiry,
-            this.parsedData.underlying2 || this.parsedData.underlying,
-            this.parsedData.delta2 || this.parsedData.delta
-        );
-    }
+    // createLeg2() {
+    //     const config = STRAT_CONFIGS[this.strategyType];
+    //     if (!config || !config.leg2) {
+    //         return null; // No second leg for this strategy
+    //     }
+    //
+    //     return new TradeLeg(
+    //         config.leg2.isBuy !== undefined ? config.leg2.isBuy : false,
+    //         config.leg2.type,
+    //         this.parsedData.strikes2 || this.parsedData.strikes,
+    //         this.parsedData.price,
+    //         this.parsedData.expiry2 || this.parsedData.expiry,
+    //         this.parsedData.underlying2 || this.parsedData.underlying,
+    //         this.parsedData.delta2 || this.parsedData.delta
+    //     );
+    // }
 
     generateConfirmation() {
         let confirmation = `Trade Confirmation:\n`;
@@ -509,50 +592,80 @@ class Trade {
     }
 
     // Updated setStrategyType method
-    setStrategyType(strategyType) {
-        if (!STRAT_CONFIGS[strategyType]) {
-            console.log(`Unknown strategy type: ${strategyType}`);
-        }
-
-        this.strategyType = strategyType;
-        const config = STRAT_CONFIGS[strategyType];
-
-        // Recreate leg1 based on new strategy
-        if (config.leg1) {
-            this.leg1 = new TradeLeg(
-                config.leg1.isBuy !== undefined ? config.leg1.isBuy : true,
-                config.leg1.type,
-                // this.leg1.strikes,
-                // this.leg1.price,
-                // this.leg1.expiry,
-                // this.leg1.underlying,
-                // this.leg1.delta
-            );
-        } else {
-            this.leg1 = null;
-        }
-
-        // Recreate leg2 based on new strategy
-        if (config.leg2) {
-            this.leg2 = new TradeLeg(
-                config.leg2.isBuy !== undefined ? config.leg2.isBuy : false,
-                config.leg2.type,
-                // this.leg2.strikes || [],
-                // this.leg2.price,
-                // this.leg2.expiry,
-                // this.leg2.underlying,
-                // this.leg2.delta
-            );
-        } else {
-            this.leg2 = null;
-        }
-    }
+    // setStrategyType(strategyType) {
+    //     if (!STRAT_CONFIGS[strategyType]) {
+    //         console.log(`Unknown strategy type: ${strategyType}`);
+    //     }
+    //
+    //     this.strategyType = strategyType;
+    //     const config = STRAT_CONFIGS[strategyType];
+    //
+    //     // Recreate leg1 based on new strategy
+    //     if (config.leg1) {
+    //         console.log("Recreating leg1 for strategy:", strategyType);
+    //         this.leg1 = new TradeLeg(
+    //             isBuy:config.leg1.isBuy !== undefined ? config.leg1.isBuy : true,
+    //             config.leg1.type,
+    //
+    //         );
+    //     } else {
+    //         console.log("No leg1 for strategy:", strategyType);
+    //         this.leg1 = null;
+    //     }
+    //
+    //     // Recreate leg2 based on new strategy
+    //     if (config.leg2) {
+    //         console.log("Recreating leg2 for strategy:", strategyType);
+    //         this.leg2 = new TradeLeg(
+    //             config.leg2.isBuy !== undefined ? config.leg2.isBuy : false,
+    //             config.leg2.type,
+    //
+    //         );
+    //     } else {
+    //         console.log("No leg2 for strategy:", strategyType);
+    //         this.leg2 = null;
+    //     }
+    // }
 }
 
 // Factory function to create trades (main export)
-export function breakdownTrade(input) {
-    return new Trade(input);
+export function breakdownTrade(parsedData) {
+    let trade = new Trade(parsedData.strategyType);
+    trade.exchange = parsedData.exchange || 'CME';
+    trade.isLive = parsedData.isLive || false;
+    trade.ratio = parsedData.ratio || '';
+    trade.lots = parsedData.lots || 100;
+    if (trade.leg1) {
+        const L = trade.leg1.strikes.length;             // expected length
+        const src = (parsedData?.strikes ?? []);
+
+        for (let i = 0; i < L; i++) {
+            trade.leg1.strikes[i] = (src[i] ?? 0);         // take first L, pad with 0s
+        }
+        //trade.leg1.strikes = parsedData.strikes || [];
+        trade.leg1.expiry = parsedData.expiry || '';
+        trade.leg1.underlying = parsedData.underlying || 0;
+        trade.leg1.delta = parsedData.delta || 0;
+        trade.leg1.prices = new Array(STRAT_STRIKE_MAP[trade.leg1.type]).fill(0);
+    }
+    if (trade.leg2) {
+        const L = trade.leg2.strikes.length;             // expected length
+        const src = (parsedData?.strikes2 ?? []);
+
+        for (let i = 0; i < L; i++) {
+            trade.leg2.strikes[i] = (src[i] ?? 0);         // take first L, pad with 0s
+        }
+        //trade.leg2.strikes = parsedData.strikes2 || [];
+        trade.leg2.expiry = parsedData.expiry2 || '';
+        trade.leg2.underlying = parsedData.underlying2 || 0;
+        trade.leg2.delta = parsedData.delta2 || 0;
+        trade.leg2.prices = new Array(STRAT_STRIKE_MAP[trade.leg2.type]).fill(0);
+    }
+    trade.buyers = [];
+    trade.sellers =  [];
+
+    return trade;
 }
 
 // Export classes for advanced usage
-export { Trade, TradeLeg, STRAT_CONFIGS, STRAT_STRIKE_MAP };
+export { TradeParser, Trade, TradeLeg, STRAT_CONFIGS, STRAT_STRIKE_MAP };

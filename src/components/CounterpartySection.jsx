@@ -5,6 +5,7 @@ const CounterpartySection = ({ title, list, setList }) => {
     const remove = i => setList(list.filter((_,j)=>j!==i));
     const update = (i,f,v) => { const u=[...list]; u[i][f]=v; setList(u); };
     return (
+
         <div className="bg-gray-50 p-4 rounded">
             <div className="flex justify-between mb-2"><h3 className="font-semibold">{title}</h3><button onClick={add} className="text-green-600"><Plus /></button></div>
             {list.map((c,i)=>(
