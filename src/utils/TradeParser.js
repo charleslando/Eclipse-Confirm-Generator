@@ -1,4 +1,6 @@
 // Trade Parser Class
+import {STRAT_CONFIGS, STRAT_STRIKE_MAP} from "./parseTradeInput.js";
+
 export class TradeParser {
     constructor() {
         this.QUARTER_MAPPING = {
@@ -203,6 +205,24 @@ export class TradeParser {
         let expiry2 = isVersus ? this.parseExpiry(expiryMatches[1]) : null;
 
         // Strikes
+        // let strikes = [];
+        // const strikeTok = tokens.find(t => /^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i.test(t));
+        // if (strikeTok) {
+        //     const m = strikeTok.match(/^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i);
+        //     strikes = m[1].split('/').map(n => parseFloat(n));
+        // }
+        //
+        // // Strikes2 (for versus structures)
+        // let strikes2 = null;
+        // if (isVersus) {
+        //     const afterVs = raw.split(/vs\.?/i)[1] || '';
+        //     const tok2 = afterVs.trim().split(/\s+/)
+        //         .find(t => /^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i.test(t));
+        //     if (tok2) {
+        //         const m2 = tok2.match(/^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i);
+        //         strikes2 = m2[1].split('/').map(n => parseFloat(n));
+        //     }
+        // }
         let strikes = [];
         const strikeTok = tokens.find(t => /^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i.test(t));
         if (strikeTok) {
@@ -210,8 +230,8 @@ export class TradeParser {
             strikes = m[1].split('/').map(n => parseFloat(n));
         }
 
-        // Strikes2 (for versus structures)
         let strikes2 = null;
+       // const isVersus = /\bvs\.?\b/i.test(raw);
         if (isVersus) {
             const afterVs = raw.split(/vs\.?/i)[1] || '';
             const tok2 = afterVs.trim().split(/\s+/)
@@ -221,6 +241,7 @@ export class TradeParser {
                 strikes2 = m2[1].split('/').map(n => parseFloat(n));
             }
         }
+
 
         // Underlying ratios
         const underTok = tokens.find(t => /^[Xx]\d+(\.\d+)?$/.test(t));
@@ -236,16 +257,9 @@ export class TradeParser {
 
         // Deltas
         const deltaMatches = raw.match(/(\d+)d/g) || [];
-        let delta = deltaMatches[0] ? parseInt(deltaMatches[0], 10) : null;
+        let delta = deltaMatches[0] ? parseInt(deltaMatches[0], 10) : 0;
         let delta2 = deltaMatches[1] ? parseInt(deltaMatches[1], 10) : null;
 
-        // Price
-        const priceMatch = raw.match(/(?:trades?|live)\s+(-?\d*\.?\d+)/i);
-        const price = priceMatch ? parseFloat(priceMatch[1]) : null;
-
-        // Lots
-        const lotsMatch = raw.match(/\((\d+)x\)$/);
-        const lots = lotsMatch ? parseInt(lotsMatch[1], 10) : 100;
 
         // Strategy type
         const strategyType = this.determineStrategyType(raw, strikes, expiry2, strikes2);
@@ -253,24 +267,79 @@ export class TradeParser {
         // Ratio (eg. "1.5x2" or "1x2")
         const ratio = tokens.find(t => /^[1-9]\d*(?:\.\d+)?x\d+$/.test(t));
 
+        // (3) now collect ALL strikes and redistribute by config
+        const allStrikes = collectAllStrikes(raw);
+        const { n1, n2 } = getExpectedStrikeCounts(strategyType);
+        const distributed = distributeStrikes(allStrikes, n1, n2);
+
+        // (4) replace strikes with distributed results
+        strikes  = distributed.leg1;
+        strikes2 = distributed.leg2;
+
         return {
             exchange,
             expiry,
-            expiry2,
+            expiry2: expiry2 || expiry,
             strikes,
-            strikes2,
+            strikes2: strikes2 || strikes,
             strategyType,
             underlying,
-            underlying2,
+            underlying2: underlying2 || underlying,
             delta,
-            delta2,
-            price,
-            lots,
+            delta2: delta2 || delta,
             isLive,
             isVersus,
             ratio
         };
     }
 }
-// export {TradeParser};
+
+// --- helpers ---------------------------------------------------------------
+
+// Count how many strikes each leg needs from STRAT_CONFIGS + STRAT_STRIKE_MAP
+const getExpectedStrikeCounts = (strategyType) => {
+    const cfg = STRAT_CONFIGS[strategyType] || { leg1: null, leg2: null };
+    const n1 = cfg.leg1?.type ? (STRAT_STRIKE_MAP[cfg.leg1.type] || 0) : 0;
+    const n2 = cfg.leg2?.type ? (STRAT_STRIKE_MAP[cfg.leg2.type] || 0) : 0;
+    return { n1, n2 };
+};
+
+// Pull EVERY strike-like token, keep order. Supports "7/8.5/9", "7c", "8.5p", plain "7.00"
+const collectAllStrikes = (raw) => {
+    const tokens = (raw.match(/\b\d+(?:\.\d+)?(?:\/\d+(?:\.\d+)?)*[a-z]*\b/gi) || []);
+    const nums = [];
+    for (const t of tokens) {
+        // strip trailing letters like c, p, cs, ps, fly
+        const core = t.replace(/[a-z]+$/i, '');
+        if (!/\d/.test(core)) continue;
+        core.split('/').forEach(s => {
+            const v = parseFloat(s);
+            if (!Number.isNaN(v)) nums.push(v);
+        });
+    }
+    return nums;
+};
+
+// Smart distributor: fill leg1 then leg2; pad short, trim long
+const distributeStrikes = (all, n1, n2) => {
+    const need = n1 + n2;
+
+    // Special case: Iron Butterfly written as 3 strikes (K1, K2, K3)
+    // but config expects 4 (two spreads). Duplicate the middle.
+    if (need === 4 && all.length === 3) {
+        const [k1, k2, k3] = all;
+        return { leg1: [k1, k2], leg2: [k2, k3] };
+    }
+
+    // Default: take what you need in order
+    const take = all.slice(0, need);
+    let leg1 = take.slice(0, n1);
+    let leg2 = take.slice(n1, n1 + n2);
+
+    // Pad if short (use nulls so you can detect missing pieces downstream)
+    while (leg1.length < n1) leg1.push(null);
+    while (leg2.length < n2) leg2.push(null);
+
+    return { leg1, leg2: n2 ? leg2 : null };
+};
 

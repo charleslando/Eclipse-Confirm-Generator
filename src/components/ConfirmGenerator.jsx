@@ -146,23 +146,7 @@ const ConfirmGenerator = () => {
 
         setTrade(newTrade);
     }
-    // function swapLegs() {
-    //     if (!trade || !trade.leg1 || !trade.leg2) {
-    //         setFeedback({ type: 'error', message: 'Both legs must be defined to swap.' });
-    //         return;
-    //     }
-    //
-    //     const temp = trade.leg1;
-    //     temp.isBuy = !trade.leg1.isBuy; // Swap buy/sell status
-    //     trade.leg2.isBuy = !trade.leg2.isBuy; // Swap buy/sell status
-    //     setTrade({
-    //         ...trade,
-    //         leg1: trade.leg2,
-    //         leg2: temp
-    //     });
-    //
-    //     setFeedback({ type: 'success', message: 'Legs swapped successfully!' });
-    // }
+
     function swapLegDetails() {
         if (!trade || !trade.leg1 || !trade.leg2) {
             setFeedback({ type: 'error', message: 'Both legs must exist to swap details.' });
@@ -225,7 +209,6 @@ const ConfirmGenerator = () => {
 
         } catch (err) {
             setFeedback({ type: 'error', message: `Parsing failed: ${err.message}` });
-            console.log("this is happening", err);
             clearInput();
         }
     };
@@ -459,37 +442,50 @@ const ConfirmGenerator = () => {
                         />
                     )}
 
-                    {/*SUMMARY SECTION*/}
                     {/* Summary Section */}
                     <div className="flex flex-col">
-                        <span className="font-bold text-sm">Total Price:</span>
-                        {(() => {
-                            const total = calculatePrice(trade.leg1) + (trade.leg2 ? calculatePrice(trade.leg2) : 0);
-                            const needsSwap = total < 0 && !!trade.leg2;
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <span className="font-bold text-sm">Total Price:</span>
+                                {(() => {
+                                    let total = calculatePrice(trade.leg1) - (trade.leg2 ? calculatePrice(trade.leg2) : 0);
+                                    total = isFiniteNum(total) ? total.toFixed(2) : 'N/A';
+                                    const needsSwap = total < 0 && !!trade.leg2;
 
-                            return (
-                                <div className="flex items-center gap-2">
-                                    <span className="text-lg">{(total)}</span>
-                                    {needsSwap && (
+                                    return (
                                         <div className="flex items-center gap-2">
-            <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
-              Net negative — consider swapping legs
-            </span>
-                                            <button
-                                                className={`text-xs px-2 py-1 rounded ${
-                                                    hasAllPrices(trade) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                }`}
-                                                onClick={swapLegDetails}
-                                                disabled={!hasAllPrices(trade)}
-                                                title={!hasAllPrices(trade) ? 'Enter all prices first' : 'Swap all leg details (panels stay)'}
-                                            >
-                                                Swap Details
-                                            </button>
+                                            <span className="text-lg">{(total)}</span>
+                                            {needsSwap && (
+                                                <div className="flex items-center gap-2">
+                                <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                                  Net negative — consider swapping legs
+                                </span>
+                                                    <button
+                                                        className={`text-xs px-2 py-1 rounded ${
+                                                            hasAllPrices(trade) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                        }`}
+                                                        onClick={swapLegDetails}
+                                                        disabled={!hasAllPrices(trade)}
+                                                        title={!hasAllPrices(trade) ? 'Enter all prices first' : 'Swap all leg details (panels stay)'}
+                                                    >
+                                                        Swap Details
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                            );
-                        })()}
+                                    );
+                                })()}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm">Timestamp:</span>
+                                <input
+                                    type="text"
+                                    className="p-2 border rounded bg-gray-50"
+                                    value={timeStamp}
+                                    onChange={(e) => {setTimestamp(e.target.value)}}
+                                />
+                            </div>
+                        </div>
                     </div>
 
 

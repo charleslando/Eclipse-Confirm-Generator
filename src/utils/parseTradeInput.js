@@ -253,46 +253,44 @@ export function calculatePrice(leg) {
         case 'call':
         case 'put': {
             let price = 0;
-            let multiplier = leg.isBuy ? -1 : 1;
             for (let i = 0; i < prices.length; i++) {
                 price += parseFloat(prices[i]) || 0;
             }
-            return price * multiplier;
+            return Math.abs(price);
         }
 
         case 'call fly':
         case 'put fly': {
             let flyPrice = 0;
             // Fly: buy-sell-buy or sell-buy-sell pattern
-            const flyMultipliers = leg.isBuy ? [-1, 1, -1] : [1, -1, 1];
+            const flyMultipliers =  [1, -2, 1];
             for (let i = 0; i < 3; i++) {
                 const strikePrice = parseFloat(prices[i]) || 0;
                 const mult = flyMultipliers[i] || 0;
                 flyPrice += strikePrice * mult;
             }
-            return flyPrice;
+            return Math.abs(flyPrice);
         }
 
         case 'straddle': {
             let straddlePrice = 0;
-            let straddleMultiplier = leg.isBuy ? -1 : 1;
             for (let i = 0; i < prices.length; i++) {
                 straddlePrice += parseFloat(prices[i]) || 0;
             }
-            return straddlePrice * straddleMultiplier;
+            return straddlePrice;
         }
 
         case 'call spread':
         case 'put spread': {
             let spreadPrice = 0;
             // Spread: buy-sell or sell-buy pattern
-            const spreadMultipliers = leg.isBuy ? [-1, 1] : [1, -1];
+            const spreadMultipliers = [1, -1];
             for (let i = 0; i < 2; i++) {
                 const strikePrice = parseFloat(prices[i]) || 0;
                 const mult = spreadMultipliers[i] || 0;
                 spreadPrice += strikePrice * mult;
             }
-            return spreadPrice;
+            return Math.abs(spreadPrice);
         }
 
         default:

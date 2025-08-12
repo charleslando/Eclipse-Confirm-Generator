@@ -45,8 +45,22 @@ const TradeDetailsPanel = ({
 
     const updateStrike = (index, value) => {
         const newStrikes = [...leg.strikes];
-        newStrikes[index] = parseFloat(value) || 0;
+        newStrikes[index] = value; // Store as string, don't parse immediately
         updateLegField('strikes', newStrikes);
+    };
+
+    const handleStrikeBlur = (index, value) => {
+        const newStrikes = [...leg.strikes];
+        newStrikes[index] = parseFloat(value) || 0; // Parse only on blur
+        updateLegField('strikes', newStrikes);
+    };
+
+    const handleDeltaBlur = (value) => {
+        updateLegField('delta', parseInt(value, 10) || 0);
+    };
+
+    const handleUnderlyingBlur = (value) => {
+        updateLegField('underlying', parseFloat(value) || 0);
     };
 
     const color = leg.isBuy? "green":"red";
@@ -92,6 +106,7 @@ const TradeDetailsPanel = ({
                                     className="w-full p-2 border rounded"
                                     value={strike}
                                     onChange={e => updateStrike(index, e.target.value)}
+                                    onBlur={e => handleStrikeBlur(index, e.target.value)}
                                 />
                             </div>
                         ))}
@@ -106,9 +121,8 @@ const TradeDetailsPanel = ({
                                 type="number"
                                 className="w-full p-2 border rounded"
                                 value={leg.delta}
-                                onChange={e => updateLegField('delta',
-                                    parseInt(e.target.value, 10) || 0
-                                )}
+                                onChange={e => updateLegField('delta', e.target.value)}
+                                onBlur={e => handleDeltaBlur(e.target.value)}
                             />
                         </div>
                         <div>
@@ -118,9 +132,8 @@ const TradeDetailsPanel = ({
                                 step="0.01"
                                 className="w-full p-2 border rounded"
                                 value={leg.underlying}
-                                onChange={e => updateLegField('underlying',
-                                    parseFloat(e.target.value) || 0
-                                )}
+                                onChange={e => updateLegField('underlying', e.target.value)}
+                                onBlur={e => handleUnderlyingBlur(e.target.value)}
                             />
                         </div>
                     </>
