@@ -57,6 +57,12 @@ export class TradeParser {
         if (lower.includes(' vs ') || lower.includes(' vs.')) {
             return this.determineVsStrategy(text, strikes, expiry2, strikes2);
         }
+        if (lower.includes(' cs ') || lower.includes('cs ')) {
+            return 'Call Spread';
+        }
+        if (lower.includes(' ps ') || lower.includes('ps ')) {
+            return 'Put Spread';
+        }
 
         // Single options and basic spreads
         if (lower.includes('straddle') || lower.includes('strad')) {
@@ -87,7 +93,7 @@ export class TradeParser {
         }
 
         // Call strategies
-        if (lower.includes('call') || lower.includes('c') ||  lower.includes('cs')) {
+        if (lower.includes('call') || lower.includes('c')) {
             if (strikes.length === 1 && !expiry2) {
                 return 'Call Option';
             } else if (strikes.length === 2) {
@@ -106,7 +112,7 @@ export class TradeParser {
         }
 
         // Put strategies
-        if (lower.includes('put') || lower.includes('p ') ||  lower.includes('ps')) {
+        if (lower.includes('put') || lower.includes('p ')) {
             if (strikes.length === 1 && !expiry2) {
                 return 'Put Option';
             } else if (strikes.length === 2) {
@@ -245,15 +251,23 @@ export class TradeParser {
         }
 
 
-        // Underlying ratios
-        const underTok = tokens.find(t => /^[Xx]\d+(\.\d+)?$/.test(t));
-        let underlying = underTok ? parseFloat(underTok.slice(1)) : 0;
 
+        // Underlying ratios
+        const underlyingMatches = raw.match(/[Xx](\d+(?:\.\d+)?)/g) || [];
+        let underlying = 0;
         let underlying2 = null;
-        if (isVersus) {
+
+        if (underlyingMatches.length > 0) {
+            underlying = parseFloat(underlyingMatches[0].slice(1));
+        }
+        if (underlyingMatches.length > 1) {
+            underlying2 = parseFloat(underlyingMatches[1].slice(1));
+        }
+
+        if (isVersus && !underlying2) {
             const afterVs = raw.split(/vs\.?/i)[1] || '';
             const underTok2 = afterVs.trim().split(/\s+/)
-                .find(t => /^[Xx]\d+(\.\d+)?$/.test(t));
+                .find(t => /^[Xx]\d+(\.\d+)?/.test(t));
             underlying2 = underTok2 ? parseFloat(underTok2.slice(1)) : null;
         }
 

@@ -260,8 +260,11 @@ export function breakdownTrade(parsedData) {
 
     return trade;
 }
-export function calculatePrice(leg) {
+export function calculatePrice(trade, leg) {
     const prices = leg.prices;
+    const parts = trade.ratio.split('x');
+    const ratio = parts.length > 1 ? parseFloat(parts[1]) : 1
+   // console.log('ratio', ratio);
     if(!prices || prices.length === 0) return 0;
     switch(leg.type) {
         case 'call':
@@ -270,7 +273,7 @@ export function calculatePrice(leg) {
             for (let i = 0; i < prices.length; i++) {
                 price += parseFloat(prices[i]) || 0;
             }
-            return Math.abs(price);
+            return Math.abs(price) * ratio; // Apply ratio if needed
         }
 
         case 'call fly':
@@ -283,7 +286,7 @@ export function calculatePrice(leg) {
                 const mult = flyMultipliers[i] || 0;
                 flyPrice += strikePrice * mult;
             }
-            return Math.abs(flyPrice);
+            return Math.abs(flyPrice) * ratio; // Apply ratio if needed
         }
 
         case 'straddle':
@@ -292,7 +295,7 @@ export function calculatePrice(leg) {
             for (let i = 0; i < prices.length; i++) {
                 straddlePrice += parseFloat(prices[i]) || 0;
             }
-            return straddlePrice;
+            return straddlePrice * ratio; // Apply ratio if needed
         }
 
         case 'call spread':
@@ -305,7 +308,7 @@ export function calculatePrice(leg) {
                 const mult = spreadMultipliers[i] || 0;
                 spreadPrice += strikePrice * mult;
             }
-            return Math.abs(spreadPrice);
+            return Math.abs(spreadPrice) * ratio; // Apply ratio if needed
         }
 
         default:

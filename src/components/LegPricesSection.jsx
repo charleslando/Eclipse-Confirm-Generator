@@ -1,7 +1,7 @@
 import React from 'react';
 import {calculatePrice} from "../utils/parseTradeInput.js";
 
-const LegPricesSection = ({ leg, setLeg}) => {
+const LegPricesSection = ({ leg, setLeg, trade}) => {
 
     const updateLegField = (field, value) => {
         setLeg({...leg, [field]: value
@@ -42,7 +42,7 @@ const LegPricesSection = ({ leg, setLeg}) => {
             <div className="mt-4">
                 <h1 className="font-semibold mb-2 text-sm">Trade Price</h1>
                     <div className="w-full p-2 border rounded bg-gray-50 text-sm font-mono">
-                        {Math.abs(calculatePrice(leg))}
+                        {Math.abs(calculatePrice(trade, leg))}
                     </div>
             </div>
         </div>

@@ -355,10 +355,11 @@ const ConfirmGenerator = () => {
                             </label>
                         </div>
 
-                        {(trade.strategyType === 'Vertical Call Spread' || trade.strategyType === 'Vertical Put Spread' ||
-                            trade.strategyType === 'Horizontal Call Spread' || trade.strategyType === 'Horizontal Put Spread' ||
-                            trade.strategyType === 'Diagonal Call Spread' || trade.strategyType === 'Diagonal Put Spread' ||
-                            trade.strategyType === 'Fence' || trade.strategyType === 'Conversion/Reversal') && (
+                        {/*{(trade.strategyType === 'Call Spread' || trade.strategyType === 'Put Spread' ||*/}
+                        {/*    //trade.strategyType === 'Horizontal Call Spread' || trade.strategyType === 'Horizontal Put Spread' ||*/}
+                        {/*    //trade.strategyType === 'Diagonal Call Spread' || trade.strategyType === 'Diagonal Put Spread' ||*/}
+                        {/*    trade.strategyType === 'Fence' || trade.strategyType === 'Conversion/Reversal') && (*/}
+                        {trade.leg2 && (
 
 
                             <div className="mt-2">
@@ -457,7 +458,7 @@ const ConfirmGenerator = () => {
                             <div>
                                 <span className="font-bold text-sm">Total Price:</span>
                                 {(() => {
-                                    let total = calculatePrice(trade.leg1) - (trade.leg2 ? calculatePrice(trade.leg2) : 0);
+                                    let total = calculatePrice(trade, trade.leg1) - (trade.leg2 ? calculatePrice(trade, trade.leg2) : 0);
                                     total = isFiniteNum(total) ? total.toFixed(2) : 'N/A';
                                     const needsSwap = total < 0 && !!trade.leg2;
 
