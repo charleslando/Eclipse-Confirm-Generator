@@ -10,20 +10,27 @@ const STRAT_CONFIGS = {
     'Put Option': { leg1: {type:'put', isBuy:true},
                     leg2: null },
 
-    // Two-leg spreads
-    'Vertical Call Spread':   { leg1: {type:'call', isBuy:true},
-                                leg2: {type:'call', isBuy:false}},
-    'Horizontal Call Spread': { leg1: {type:'call', isBuy:true},
-                                leg2: {type:'call', isBuy:false} },
-    'Diagonal Call Spread':   { leg1: {type:'call', isBuy:true},
-                                leg2: {type:'call', isBuy:false} },
+    // // Two-leg spreads
+    // 'Vertical Call Spread':   { leg1: {type:'call', isBuy:true},
+    //                             leg2: {type:'call', isBuy:false}},
+    // 'Horizontal Call Spread': { leg1: {type:'call', isBuy:true},
+    //                             leg2: {type:'call', isBuy:false} },
+    // 'Diagonal Call Spread':   { leg1: {type:'call', isBuy:true},
+    //                             leg2: {type:'call', isBuy:false} },
 
-    'Vertical Put Spread':    { leg1: {type:'put', isBuy:true},
-                                leg2: {type:'put', isBuy:false} },
-    'Horizontal Put Spread':  { leg1: {type:'put', isBuy:true},
-                                leg2: {type:'put', isBuy:false} },
-    'Diagonal Put Spread':    { leg1: {type:'put', isBuy:true},
-                                leg2: {type:'put', isBuy:false} },
+    'Call Spread':   { leg1: {type:'call', isBuy:true},
+        leg2: {type:'call', isBuy:false}},
+
+    // 'Vertical Put Spread':    { leg1: {type:'put', isBuy:true},
+    //                             leg2: {type:'put', isBuy:false} },
+    // 'Horizontal Put Spread':  { leg1: {type:'put', isBuy:true},
+    //                             leg2: {type:'put', isBuy:false} },
+    // 'Diagonal Put Spread':    { leg1: {type:'put', isBuy:true},
+    //                             leg2: {type:'put', isBuy:false} },
+
+    'Put Spread':    { leg1: {type:'put', isBuy:true},
+        leg2: {type:'put', isBuy:false} },
+
 
 
     'Straddle': { leg1: {type:'call', isBuy:true},
@@ -35,8 +42,14 @@ const STRAT_CONFIGS = {
     // Two-panel "spread of spreads"
     'Straddle Spread':        { leg1: {type:'straddle', isBuy:true},
                                 leg2: {type:'straddle', isBuy:false} },
-    'Diagonal Straddle Spread': {   leg1: {type:'straddle', isBuy:true},
-                                    leg2: {type:'straddle', isBuy:false} },
+    // 'Diagonal Straddle Spread': {   leg1: {type:'straddle', isBuy:true},
+    //                                 leg2: {type:'straddle', isBuy:false} },
+
+    'Strangle Spread':        { leg1: {type:'strangle', isBuy:true},
+                                leg2: {type:'strangle', isBuy:false} },
+    // 'Diagonal Strangle Spread': { leg1: {type:'strangle', isBuy:true},
+    //                               leg2: {type:'strangle', isBuy:false} },
+
 
     // Collars / fences
     'Fence': { leg1: {type:'put', isBuy:true},
@@ -85,10 +98,11 @@ const STRAT_STRIKE_MAP = {
     'call spread': 2,
     'put spread': 2,
     'straddle': 2,
+    'strangle': 2,
     'call fly': 3,
     'put fly': 3,
 
-}
+};
 
 // Enhanced Trade Leg Class with better validation
 // Enhanced Trade Leg Class with proper initialization
@@ -216,7 +230,7 @@ export function breakdownTrade(parsedData) {
     if (trade.leg1) {
         //const L = trade.leg1.strikes.length;             // expected length
         const L = STRAT_STRIKE_MAP[trade.leg1.type]; // expected length based on type
-        const src = (parsedData?.strikes ?? []);
+        const src = (parsedData.strikes);
 
         for (let i = 0; i < L; i++) {
             trade.leg1.strikes[i] = (src[i] ?? 0);         // take first L, pad with 0s
@@ -230,7 +244,7 @@ export function breakdownTrade(parsedData) {
     if (trade.leg2) {
         //const L = trade.leg2.strikes.length;             // expected length
         const L = STRAT_STRIKE_MAP[trade.leg2.type];
-        const src = (parsedData?.strikes2 ?? []);
+        const src = (parsedData.strikes2);
 
         for (let i = 0; i < L; i++) {
             trade.leg2.strikes[i] = (src[i] ?? 0);         // take first L, pad with 0s
@@ -272,7 +286,8 @@ export function calculatePrice(leg) {
             return Math.abs(flyPrice);
         }
 
-        case 'straddle': {
+        case 'straddle':
+        case 'strangle': {
             let straddlePrice = 0;
             for (let i = 0; i < prices.length; i++) {
                 straddlePrice += parseFloat(prices[i]) || 0;

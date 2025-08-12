@@ -92,6 +92,7 @@ const ConfirmGenerator = () => {
             setFeedback({ type: 'success', message: 'Single structure initialized!' });
     };
 
+
     function extracted(strategyType) {
         // Create a completely new Trade instance
         const newTrade = new Trade(strategyType);
@@ -142,6 +143,14 @@ const ConfirmGenerator = () => {
             newTrade.leg2.expiry = trade.leg2.expiry || parsedData?.expiry2 || '';
             newTrade.leg2.underlying = trade.leg2.underlying || parsedData?.underlying2 || 0;
             newTrade.leg2.delta = trade.leg2.delta || parsedData?.delta2 || 0;
+        }
+        else if(newTrade.leg2){
+            // trade doesnt have leg2, but newTrade does
+            newTrade.leg2.expiry = parsedData.expiry2;
+            newTrade.leg2.underlying = parsedData.underlying;
+            newTrade.leg2.delta = parsedData.delta2;
+            newTrade.leg2.strikes = parsedData.strikes2 || new Array(STRAT_STRIKE_MAP[newTrade.leg2.type] || 1).fill(0);
+            newTrade.leg2.prices =  new Array(STRAT_STRIKE_MAP[newTrade.leg2.type] || 1).fill(0);
         }
 
         setTrade(newTrade);

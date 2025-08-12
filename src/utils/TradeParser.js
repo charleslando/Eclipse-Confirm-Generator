@@ -59,20 +59,31 @@ export class TradeParser {
         }
 
         // Single options and basic spreads
-        if (lower.includes('straddle') || lower.includes('strd')) {
+        if (lower.includes('straddle') || lower.includes('strad')) {
             if (strikes.length === 1 && !expiry2) {
                 return 'Straddle';
             } else if (strikes.length >= 2 || expiry2) {
-                if (!expiry2) {
-                    return 'Straddle Spread';
-                } else {
-                    return 'Diagonal Straddle Spread';
-                }
+                // if (!expiry2) {
+                //     return 'Straddle Spread';
+                // } else {
+                //     return 'Diagonal Straddle Spread';
+                // }
+                return 'Straddle Spread';
             }
         }
 
         if (lower.includes('strangle') || lower.includes('strang')) {
-            return 'Strangle';
+            if( strikes.length === 1 && !expiry2) {
+                return 'Strangle';
+            }
+            else if (strikes.length >= 2 || expiry2) {
+                // if (!expiry2) {
+                //     return 'Strangle Spread';
+                // } else {
+                //     return 'Diagonal Strangle Spread';
+                // }
+                return 'Strangle Spread';
+            }
         }
 
         // Call strategies
@@ -80,13 +91,15 @@ export class TradeParser {
             if (strikes.length === 1 && !expiry2) {
                 return 'Call Option';
             } else if (strikes.length === 2) {
-                if (!expiry2) {
-                    return 'Vertical Call Spread';
-                } else if (!strikes2) {
-                    return 'Horizontal Call Spread';
-                } else {
-                    return 'Diagonal Call Spread';
-                }
+                // if (!expiry2) {
+                //     return 'Vertical Call Spread';
+                // } else if (!strikes2) {
+                //     return 'Horizontal Call Spread';
+                // } else {
+                //     return 'Diagonal Call Spread';
+                // }
+                return 'Call Spread'
+
             } else if (strikes.length >= 3) {
                 return 'Call Fly';
             }
@@ -97,13 +110,14 @@ export class TradeParser {
             if (strikes.length === 1 && !expiry2) {
                 return 'Put Option';
             } else if (strikes.length === 2) {
-                if (!expiry2) {
-                    return 'Vertical Put Spread';
-                } else if (!strikes2) {
-                    return 'Horizontal Put Spread';
-                } else {
-                    return 'Diagonal Put Spread';
-                }
+                // if (!expiry2) {
+                //     return 'Vertical Put Spread';
+                // } else if (!strikes2) {
+                //     return 'Horizontal Put Spread';
+                // } else {
+                //     return 'Diagonal Put Spread';
+                // }
+                return 'Put Spread';
             } else if (strikes.length >= 3) {
                 return 'Put Fly';
             }
@@ -128,17 +142,24 @@ export class TradeParser {
 
         // Map combinations to strategy types
         const combinationMap = {
+            'call-call': 'Call Spread',
+            'put-put': 'Put Spread',
             'call_spread-put': '3-Way: Call Spread v Put',
             'put_spread-call': '3-Way: Put Spread v Call',
             'straddle-call': '3-Way: Straddle v Call',
             'straddle-put': '3-Way: Straddle v Put',
-            'straddle-straddle': expiry2 ? 'Diagonal Straddle Spread' : 'Straddle Spread',
+            'straddle-straddle': 'Straddle Spread',
+            'strangle-strangle': 'Strangle Spread',
             'call_spread-put_spread': 'Iron Condor',
             'put_spread-call_spread': 'Iron Condor',
             'call_spread-call_spread': 'Call Condor',
             'put_spread-put_spread': 'Put Condor',
             'put-call': 'Conversion/Reversal',
-            'call-put': 'Conversion/Reversal'
+            'call-put': 'Conversion/Reversal',
+            'put_spread-put': 'Put Tree',
+            'put-put_spread': 'Put Tree',
+            'call_spread-call': 'Call Tree',
+            'call-call_spread': 'Call Tree',
         };
 
         const key = `${leftType}-${rightType}`;
@@ -162,7 +183,7 @@ export class TradeParser {
             return 'put_spread';
         }
 
-        if (side.includes('straddle') || side.includes('strd')) {
+        if (side.includes('straddle') || side.includes('strad')) {
             return 'straddle';
         }
 
@@ -193,7 +214,7 @@ export class TradeParser {
         const tokens = raw.split(/\s+/);
 
         // Exchange detection
-        const exchange = this.knownExchanges.find(ex => raw.includes(ex)) || null;
+        const exchange = this.knownExchanges.find(ex => raw.includes(ex)) || '';
 
         // Flags
         const isLive = /live/i.test(raw);
@@ -205,24 +226,6 @@ export class TradeParser {
         let expiry2 = isVersus ? this.parseExpiry(expiryMatches[1]) : null;
 
         // Strikes
-        // let strikes = [];
-        // const strikeTok = tokens.find(t => /^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i.test(t));
-        // if (strikeTok) {
-        //     const m = strikeTok.match(/^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i);
-        //     strikes = m[1].split('/').map(n => parseFloat(n));
-        // }
-        //
-        // // Strikes2 (for versus structures)
-        // let strikes2 = null;
-        // if (isVersus) {
-        //     const afterVs = raw.split(/vs\.?/i)[1] || '';
-        //     const tok2 = afterVs.trim().split(/\s+/)
-        //         .find(t => /^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i.test(t));
-        //     if (tok2) {
-        //         const m2 = tok2.match(/^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i);
-        //         strikes2 = m2[1].split('/').map(n => parseFloat(n));
-        //     }
-        // }
         let strikes = [];
         const strikeTok = tokens.find(t => /^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i.test(t));
         if (strikeTok) {
@@ -231,7 +234,6 @@ export class TradeParser {
         }
 
         let strikes2 = null;
-       // const isVersus = /\bvs\.?\b/i.test(raw);
         if (isVersus) {
             const afterVs = raw.split(/vs\.?/i)[1] || '';
             const tok2 = afterVs.trim().split(/\s+/)
@@ -245,7 +247,7 @@ export class TradeParser {
 
         // Underlying ratios
         const underTok = tokens.find(t => /^[Xx]\d+(\.\d+)?$/.test(t));
-        let underlying = underTok ? parseFloat(underTok.slice(1)) : null;
+        let underlying = underTok ? parseFloat(underTok.slice(1)) : 0;
 
         let underlying2 = null;
         if (isVersus) {
@@ -337,9 +339,13 @@ const distributeStrikes = (all, n1, n2) => {
     let leg2 = take.slice(n1, n1 + n2);
 
     // Pad if short (use nulls so you can detect missing pieces downstream)
-    while (leg1.length < n1) leg1.push(null);
-    while (leg2.length < n2) leg2.push(null);
+    while (leg1.length < n1) leg1.push(0);
+    while (leg2.length < n2) leg2.push(0);
+
+    // If leg2 is all zeros, use leg1 values instead
+    if (leg2 && leg2.every(strike => strike === 0)) {
+        leg2 = [...leg1];
+    }
 
     return { leg1, leg2: n2 ? leg2 : null };
 };
-
