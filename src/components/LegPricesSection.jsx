@@ -38,9 +38,11 @@ const LegPricesSection = ({ leg, setLeg, trade, ratio}) => {
                             value={(leg.prices && leg.prices[i]) || ''}
                             onChange={e => updateStrikePrice(i, e.target.value)}
                         />
-                        <span className="w-16 text-sm text-gray-500">
-                            (x{ratio})
-                        </span>
+                        {ratio !== '1' && (
+                            <span className="w-16 text-sm text-gray-500">
+                                (x{ratio})
+                            </span>
+                        )}
                     </div>
                 ))}
             </div>

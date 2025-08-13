@@ -37,7 +37,6 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
         const arr = leg?.prices || [];
         for (let i = 0; i < need; i++) {
             if (!isFiniteNum(arr[i])){
-                console.log(arr[i]);
                 return false;
             }
         }
@@ -242,6 +241,7 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
     const generateConfirmations = () => {
         if (!trade) return;
         console.log(JSON.stringify(trade, null, 2));
+        console.log(trade.ratio)
         try {
             // Create a TradeConfirmer instance with the trade
             const confirmer = new TradeConfirmer(trade, timeStamp, productCode, tradeInput);
@@ -514,7 +514,7 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                                     total = isFiniteNum(total) ? total.toFixed(4) : 'N/A';
                                     const needsSwap = total < 0 && !!trade.leg2;
                                     const priceMatches = !trade.price || trade.price === 0 || Math.abs(parseFloat(total) - parseFloat(trade.price)) < 0.0001;
-                                    const totalStr = trade.price === 0 ? '' : `(Expected: ${trade.price})` ;
+                                    const totalStr = trade.price === 0 ? '' : `(Expected: ${trade.price.toFixed(4)})` ;
 
                                     // Calculate the difference when prices don't match
                                     const difference = priceMatches ? 0 : Math.abs(parseFloat(total) - parseFloat(trade.price || 0));
