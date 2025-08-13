@@ -1,5 +1,112 @@
+// Strategy Configuration
+const STRAT_CONFIGS = {
+    // No-op
+    'Custom': { leg1: {type:'call', isBuy:true},
+        leg2: null },
+
+    // Single-leg
+    'Call Option': { leg1: {type:'call', isBuy:true},
+        leg2: null },
+    'Put Option': { leg1: {type:'put', isBuy:true},
+        leg2: null },
+
+    // // Two-leg spreads
+    // 'Vertical Call Spread':   { leg1: {type:'call', isBuy:true},
+    //                             leg2: {type:'call', isBuy:false}},
+    // 'Horizontal Call Spread': { leg1: {type:'call', isBuy:true},
+    //                             leg2: {type:'call', isBuy:false} },
+    // 'Diagonal Call Spread':   { leg1: {type:'call', isBuy:true},
+    //                             leg2: {type:'call', isBuy:false} },
+
+    'Call Spread':   { leg1: {type:'call', isBuy:true},
+        leg2: {type:'call', isBuy:false}},
+
+    // 'Vertical Put Spread':    { leg1: {type:'put', isBuy:true},
+    //                             leg2: {type:'put', isBuy:false} },
+    // 'Horizontal Put Spread':  { leg1: {type:'put', isBuy:true},
+    //                             leg2: {type:'put', isBuy:false} },
+    // 'Diagonal Put Spread':    { leg1: {type:'put', isBuy:true},
+    //                             leg2: {type:'put', isBuy:false} },
+
+    'Put Spread':    { leg1: {type:'put', isBuy:true},
+        leg2: {type:'put', isBuy:false} },
+
+
+
+    'Straddle': { leg1: {type:'call', isBuy:true},
+        leg2: {type:'put', isBuy:true} },
+    'Strangle': { leg1: {type:'put', isBuy:true},
+        leg2: {type:'call', isBuy:true} },
+
+
+    // Two-panel "spread of spreads"
+    'Straddle Spread':        { leg1: {type:'straddle', isBuy:true},
+        leg2: {type:'straddle', isBuy:false} },
+    // 'Diagonal Straddle Spread': {   leg1: {type:'straddle', isBuy:true},
+    //                                 leg2: {type:'straddle', isBuy:false} },
+
+    'Strangle Spread':        { leg1: {type:'strangle', isBuy:true},
+        leg2: {type:'strangle', isBuy:false} },
+    // 'Diagonal Strangle Spread': { leg1: {type:'strangle', isBuy:true},
+    //                               leg2: {type:'strangle', isBuy:false} },
+
+
+    // Collars / fences
+    'Fence': { leg1: {type:'put', isBuy:true},
+        leg2: {type:'call', isBuy:false} },
+
+    // Butterflies (one panel)
+    'Call Fly': { leg1: {type:'call fly', isBuy:true},
+        leg2: null },
+    'Put Fly': { leg1: {type:'put fly', isBuy:true},
+        leg2: null },
+
+    // Conversion / Reversal (dual panel: call vs put)
+    'Conversion/Reversal': { leg1: {type:'put', isBuy:true},
+        leg2: {type:'call', isBuy:false} },
+
+    // Iron and Condor combos
+    'Iron Butterfly': {leg1: { type: 'put spread', isBuy: true },
+        leg2: { type: 'call spread', isBuy: false }},
+
+    'Call Condor': {leg1: { type: 'call spread', isBuy: true },
+        leg2: { type: 'call spread', isBuy: false }},
+    'Put Condor': { leg1: { type: 'put spread', isBuy: true },
+        leg2: { type: 'put spread', isBuy: false }},
+    'Iron Condor': { leg1: { type: 'put spread', isBuy: true },
+        leg2: { type: 'call spread', isBuy: false }},
+
+    // Trees (one panel)
+    'Call Tree': {leg1: { type: 'call spread', isBuy: true },
+        leg2: { type: 'call', isBuy: false }},
+    'Put Tree': {leg1: { type: 'put spread', isBuy: true },
+        leg2: { type: 'put', isBuy: false }},
+
+    // 3-Way combos
+    '3-Way: Call Spread v Put': {leg1: { type: 'call spread', isBuy: true },
+        leg2: { type: 'put', isBuy: false }},
+    '3-Way: Put Spread v Call': {leg1: { type: 'put spread', isBuy: true },
+        leg2: { type: 'call', isBuy: false }},
+    '3-Way: Straddle v Call': {leg1: { type: 'straddle', isBuy: true },
+        leg2: { type: 'call', isBuy: false }},
+    '3-Way: Straddle v Put': {leg1: { type: 'straddle', isBuy: true },
+        leg2: { type: 'put', isBuy: false }},
+};
+const STRAT_STRIKE_MAP = {
+    'call': 1,
+    'put': 1,
+    'call spread': 2,
+    'put spread': 2,
+    'straddle': 2,
+    'strangle': 2,
+    'call fly': 3,
+    'put fly': 3,
+
+};
+
+
 // Trade Parser Class
-import {STRAT_CONFIGS, STRAT_STRIKE_MAP} from "./parseTradeInput.js";
+
 
 export class TradeParser {
     constructor() {
@@ -321,8 +428,25 @@ const getExpectedStrikeCounts = (strategyType) => {
 };
 
 // Pull EVERY strike-like token, keep order. Supports "7/8.5/9", "7c", "8.5p", plain "7.00"
+// const collectAllStrikes = (raw) => {
+//     const tokens = (raw.match(/\b\d+(?:\.\d+)?(?:\/\d+(?:\.\d+)?)*[a-z]*\b/gi) || []);
+//     const nums = [];
+//     for (const t of tokens) {
+//         // strip trailing letters like c, p, cs, ps, fly
+//         const core = t.replace(/[a-z]+$/i, '');
+//         if (!/\d/.test(core)) continue;
+//         core.split('/').forEach(s => {
+//             const v = parseFloat(s);
+//             if (!Number.isNaN(v)) nums.push(v);
+//         });
+//     }
+//     return nums;
+// };
 const collectAllStrikes = (raw) => {
-    const tokens = (raw.match(/\b\d+(?:\.\d+)?(?:\/\d+(?:\.\d+)?)*[a-z]*\b/gi) || []);
+    // First, remove ratio patterns like 'x4.16' to prevent false matches
+    const cleanText = raw.replace(/[Xx]\d+(?:\.\d+)?/g, '');
+
+    const tokens = (cleanText.match(/\b\d+(?:\.\d+)?(?:\/\d+(?:\.\d+)?)*[a-z]*\b/gi) || []);
     const nums = [];
     for (const t of tokens) {
         // strip trailing letters like c, p, cs, ps, fly
@@ -363,3 +487,4 @@ const distributeStrikes = (all, n1, n2) => {
 
     return { leg1, leg2: n2 ? leg2 : null };
 };
+export {STRAT_CONFIGS, STRAT_STRIKE_MAP}

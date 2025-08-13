@@ -1,6 +1,6 @@
 import React from "react";
 import { startCase } from "lodash";
-import {STRAT_STRIKE_MAP} from "../utils/parseTradeInput.js";
+import {STRAT_STRIKE_MAP} from "../utils/TradeCreator.js";
 
 const TradeDetailsPanel = ({
                                leg,
@@ -15,8 +15,6 @@ const TradeDetailsPanel = ({
     };
 
     const updateLegType = (newType) => {
-        // Create a new leg object and use its updateType method
-        //const updatedLeg = { ...leg };
 
         // Manually implement the type update logic since we're working with plain objects
         const requiredStrikes = STRAT_STRIKE_MAP[newType] || 1;

@@ -1,31 +1,28 @@
 import React, { useState } from 'react';
 import EclipseLogo from '../assets/EclipseLogo.jpg';
 import {TradeParser} from '../utils/TradeParser';
-import {breakdownTrade, calculatePrice, Trade} from '../utils/parseTradeInput';
-import { generateTradeLines } from '../utils/generateTradeLines';
-import LegPricesSection from './LegPricesSection';
+import {breakdownTrade, calculatePrice, Trade} from '../utils/TradeCreator.js';
+import TradeConfirmer from '../utils/TradeConfirmer.js';
 import CounterpartySection from './CounterpartySection';
 import OutputSection from './OutputSection';
 import TradeDetailsPanel from './TradeDetailsPanel';
-import { STRAT_CONFIGS, STRAT_STRIKE_MAP } from "../utils/parseTradeInput";
-
-
+import { STRAT_CONFIGS, STRAT_STRIKE_MAP } from "../utils/TradeCreator.js";
+import LegPricesSection from "./LegPricesSection.jsx";
 
 const ConfirmGenerator = () => {
     const [trade, setTrade] = useState(null);
-
     const [productCode, setProductCode] = useState('LN');
     const [tradeInput, setTradeInput] = useState('');
     const [parsedData, setParsedData] = useState(null);
-
     const [counterparties, setCounterparties] = useState({ buyers: [], sellers: [] });
     const [output, setOutput] = useState('');
-
     const [feedback, setFeedback] = useState(null);
     const [timeStamp, setTimestamp] = useState(new Date().toLocaleTimeString());
 
-    function isFiniteNum(v) { return typeof v === 'number' && Number.isFinite(v); }
-
+    function isFiniteNum(v) {
+        const num = typeof v === 'string' ? parseFloat(v) : v;
+        return typeof num === 'number' && Number.isFinite(num);
+    }
     function requiredStrikeCount(leg) {
         return STRAT_STRIKE_MAP[leg?.type] || (leg?.strikes?.length ?? 0) || 0;
     }
@@ -35,7 +32,10 @@ const ConfirmGenerator = () => {
         const need = requiredStrikeCount(leg);
         const arr = leg?.prices || [];
         for (let i = 0; i < need; i++) {
-            if (!isFiniteNum(arr[i])) return false;
+            if (!isFiniteNum(arr[i])){
+                console.log(arr[i]);
+                return false;
+            }
         }
         return true;
     }
@@ -188,6 +188,15 @@ const ConfirmGenerator = () => {
             leg2: leg1Copy,
         });
 
+        //swap the ratio if it exists
+        if (trade.ratio) {
+            const ratioParts = trade.ratio.split('x');
+            if (ratioParts.length === 2) {
+                const newRatio = `${ratioParts[1]}x${ratioParts[0]}`;
+                setTrade(prevTrade => ({ ...prevTrade, ratio: newRatio }));
+            }
+        }
+
         setFeedback({ type: 'success', message: 'Leg details swapped (panels unchanged).' });
     }
 
@@ -224,26 +233,26 @@ const ConfirmGenerator = () => {
 
     const generateConfirmations = () => {
         if (!trade) return;
+        try {
+            // Create a TradeConfirmer instance with the trade
+            const confirmer = new TradeConfirmer(trade);
 
-        const confs = [];
-        const { buyers, sellers } = counterparties;
+            // Generate confirmations with buyers and sellers
+            const confirmationText = confirmer.generateConfirmations(counterparties.buyers, counterparties.sellers);
 
-        if (!buyers.length && !sellers.length) {
-            buyers.push({ name: 'BUYER_1', quantity: 100 });
-            sellers.push({ name: 'SELLER_1', quantity: 100 });
+            if (!confirmationText) {
+                setFeedback({ type: 'error', message: 'Failed to generate confirmations.' });
+                return;
+            }
+
+            setOutput(confirmationText);
+            setFeedback({ type: 'success', message: 'Confirmations generated successfully!' });
+
+        } catch (error) {
+            console.error('Confirmation generation error:', error);
+            setFeedback({ type: 'error', message: `Error generating confirmations: ${error.message}` });
         }
 
-        buyers.forEach(({ name, quantity }) => {
-            confs.push(`BUYER (${quantity}X): ${name.toUpperCase()}`);
-            confs.push(generateTradeLines(trade, quantity, 'BUY'));
-        });
-
-        sellers.forEach(({ name, quantity }) => {
-            confs.push(`\nSELLER (${quantity}X): ${name.toUpperCase()}`);
-            confs.push(generateTradeLines(trade, quantity, 'SELL'));
-        });
-
-        setOutput(confs.join('\n'));
     };
 
 
@@ -364,20 +373,28 @@ const ConfirmGenerator = () => {
 
                             <div className="mt-2">
                                 <label className="block text-sm font-medium mb-1">Ratio</label>
-                                <div className="flex gap-2">
-                                    {['1x1', '1x2', '1x3', '1x1.5'].map(ratio => (
-                                        <button
-                                            key={ratio}
-                                            className={`px-3 py-1 rounded ${
-                                                (trade.ratio || '1x1')  === ratio
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'bg-gray-100 hover:bg-gray-200'
-                                            }`}
-                                            onClick={() => setTrade({ ...trade, ratio: ratio })}
-                                        >
-                                            {ratio}
-                                        </button>
-                                    ))}
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        className="w-16 px-2 py-1 border rounded"
+                                        value={trade.ratio ? trade.ratio.split('x')[0] : '1'}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/[^\d.]/g, '');
+                                            const ratio2 = trade.ratio ? trade.ratio.split('x')[1] : '1';
+                                            setTrade({ ...trade, ratio: `${val}x${ratio2}` });
+                                        }}
+                                    />
+                                    <span className="font-medium">x</span>
+                                    <input
+                                        type="text"
+                                        className="w-16 px-2 py-1 border rounded"
+                                        value={trade.ratio ? trade.ratio.split('x')[1] : '1'}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/[^\d.]/g, '');
+                                            const ratio1 = trade.ratio ? trade.ratio.split('x')[0] : '1';
+                                            setTrade({ ...trade, ratio: `${ratio1}x${val}` });
+                                        }}
+                                    />
                                 </div>
                             </div>
                         )}
@@ -517,18 +534,18 @@ const ConfirmGenerator = () => {
                             Generate Confirmations
                         </button>
 
-                        {/* Debug Info */}
-                        <div className="bg-gray-100 p-3 rounded text-xs">
-                            <strong>Trade Data:</strong>
-                            <pre>{JSON.stringify(trade, null, 2)}</pre>
-                            <strong>Parsed Data:</strong>
-                            <pre>{JSON.stringify(parsedData, null, 2)}</pre>
-                        </div>
                     </div>
                 </>
             )}
 
             {output && <OutputSection output={output} />}
+            {/* Debug Info */}
+            <div className="bg-gray-100 p-3 rounded text-xs">
+                <strong>Trade Data:</strong>
+                <pre>{JSON.stringify(trade, null, 2)}</pre>
+                <strong>Parsed Data:</strong>
+                <pre>{JSON.stringify(parsedData, null, 2)}</pre>
+            </div>
         </div>
     );
 };

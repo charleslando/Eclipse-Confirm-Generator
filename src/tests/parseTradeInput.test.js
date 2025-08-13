@@ -1,5 +1,5 @@
 //src/utils/parseTradeInput.test.js
-import { parseTradeInput } from '../utils/parseTradeInput.js'
+import { parseTradeInput } from '../utils/TradeCreator.js'
 import { describe, it, expect } from 'vitest'
 
 //bugs

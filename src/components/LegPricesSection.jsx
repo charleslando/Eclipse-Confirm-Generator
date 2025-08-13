@@ -1,5 +1,5 @@
 import React from 'react';
-import {calculatePrice} from "../utils/parseTradeInput.js";
+import {calculatePrice} from "../utils/TradeCreator.js";
 
 const LegPricesSection = ({ leg, setLeg, trade}) => {
 
@@ -10,11 +10,14 @@ const LegPricesSection = ({ leg, setLeg, trade}) => {
 
     const updateStrikePrice = (index, price) => {
         const newPrices = [...(leg.prices || [])];
-        // Ensure the prices array is the same length as strikes
         while (newPrices.length < leg.strikes.length) {
             newPrices.push('');
         }
-        newPrices[index] = price === '' ? '' : parseFloat(price) || '';
+
+        // Only parse to float when the input is complete
+        const isValidNumber = !isNaN(price) && price !== '';
+        newPrices[index] = isValidNumber ? price : price;
+
         updateLegField('prices', newPrices);
     };
 
