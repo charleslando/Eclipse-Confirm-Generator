@@ -1,7 +1,9 @@
 // TradeConfirmer.js - Dedicated trade confirmation generator
 export class TradeConfirmer {
-    constructor(trade) {
+    constructor(trade, timeStamp, productCode) {
         this.trade = trade;
+        this.timeStamp = timeStamp;
+        this.productCode = productCode;
     }
 
     /**
@@ -10,15 +12,15 @@ export class TradeConfirmer {
      * @param {Array} sellers - Array of seller objects {name, quantity}
      * @returns {string} - Formatted confirmation text
      */
-    generateConfirmations(buyers = [], sellers = []) {
+    generateConfirmations(buyers = [], sellers = [], timeStamp, productCode) {
         if (!this.trade) return '';
 
         const confirmations = [];
 
         // Default counterparties if none provided
         if (!buyers.length && !sellers.length) {
-            buyers.push({ name: 'BUYER_1', quantity: 100 });
-            sellers.push({ name: 'SELLER_1', quantity: 100 });
+            buyers.push({ name: '', quantity: 100 });
+            sellers.push({ name: '', quantity: 100 });
         }
 
         // Generate buyer confirmations
@@ -153,11 +155,12 @@ export class TradeConfirmer {
         const action = shouldBuy ? 'Buys' : 'Sells';
         const prep = shouldBuy ? 'for' : 'at';
         const optionType = leg.type.toLowerCase();
-        const strike = leg.strikes[0] || 0;
-        const price = leg.prices[0] || 0;
-        const adjustedQuantity = Math.round(quantity * ratio);
+        const strike = leg.strikes[0];
+        const price = leg.prices[0];
+        const adjustedQuantity = (quantity * ratio);
 
-        return `${action} ${adjustedQuantity} ${leg.expiry} ${strike} ${optionType} ${prep} ${price}`;
+
+        return `${action} ${adjustedQuantity} ${this.productCode} ${leg.expiry} ${strike} ${optionType} ${prep} ${price}`;
     }
 
     /**
@@ -166,17 +169,19 @@ export class TradeConfirmer {
     generateSpreadLines(leg, quantity, shouldBuy, ratio) {
         const lines = [];
         const isCallSpread = leg.type.toLowerCase().includes('call');
-        const optionType = isCallSpread ? 'call' : 'put';
+        const optionType = isCallSpread ? 'Call' : 'Put';
         const [strike1, strike2] = leg.strikes;
         const [price1, price2] = leg.prices;
         const quantity2 = (quantity * ratio);
 
+
+
         if (shouldBuy) {
-            lines.push(`Buys ${quantity} ${leg.expiry} ${strike1} ${optionType} for ${price1}`);
-            lines.push(`Sells ${quantity2} ${leg.expiry} ${strike2} ${optionType} at ${price2}`);
+            lines.push(`Buys ${quantity} ${this.productCode} ${leg.expiry} ${strike1} ${optionType} for ${price1}`);
+            lines.push(`Sells ${quantity2} ${this.productCode} ${leg.expiry} ${strike2} ${optionType} at ${price2}`);
         } else {
-            lines.push(`Sells ${quantity} ${leg.expiry} ${strike1} ${optionType} at ${price1}`);
-            lines.push(`Buys ${quantity2} ${leg.expiry} ${strike2} ${optionType} for ${price2}`);
+            lines.push(`Sells ${quantity} ${this.productCode} ${leg.expiry} ${strike1} ${optionType} at ${price1}`);
+            lines.push(`Buys ${quantity2} ${this.productCode} ${leg.expiry} ${strike2} ${optionType} for ${price2}`);
         }
 
         return lines;
@@ -193,8 +198,8 @@ export class TradeConfirmer {
         const [putPrice, callPrice] = leg.prices;
         const quantity2 = (quantity * ratio);
 
-        lines.push(`${action} ${quantity} ${leg.expiry} ${strike} put ${prep} ${putPrice}`);
-        lines.push(`${action} ${quantity2} ${leg.expiry} ${strike} call ${prep} ${callPrice}`);
+        lines.push(`${action} ${quantity} ${this.productCode} ${leg.expiry} ${strike} Put ${prep} ${putPrice}`);
+        lines.push(`${action} ${quantity2} ${this.productCode} ${leg.expiry} ${strike} Call ${prep} ${callPrice}`);
 
         return lines;
     }
@@ -219,11 +224,11 @@ export class TradeConfirmer {
         const quantity2 = (quantity * ratio);
 
         if (shouldBuy) {
-            lines.push(`Buys ${quantity} ${leg.expiry} ${putStrike} put for ${putPrice}`);
-            lines.push(`Sells ${quantity2} ${leg.expiry} ${callStrike} call at ${callPrice}`);
+            lines.push(`Buys ${quantity} ${this.productCode} ${leg.expiry} ${putStrike} Put for ${putPrice}`);
+            lines.push(`Sells ${quantity2} ${leg.expiry} ${callStrike} Call at ${callPrice}`);
         } else {
-            lines.push(`Sells ${quantity} ${leg.expiry} ${putStrike} put at ${putPrice}`);
-            lines.push(`Buys ${quantity2} ${leg.expiry} ${callStrike} call for ${callPrice}`);
+            lines.push(`Sells ${quantity} ${this.productCode} ${leg.expiry} ${putStrike} Put at ${putPrice}`);
+            lines.push(`Buys ${quantity2} ${this.productCode} ${leg.expiry} ${callStrike} Call for ${callPrice}`);
         }
 
         return lines;
@@ -238,19 +243,19 @@ export class TradeConfirmer {
     generateButterflyLines(leg, quantity, shouldBuy, ratio = 1) {
         const lines = [];
         const isCall = leg.type.toLowerCase().includes('call');
-        const optionType = isCall ? 'call' : 'put';
+        const optionType = isCall ? 'Call' : 'Put';
         const [strike1, strike2, strike3] = leg.strikes;
         const [price1, price2, price3] = leg.prices;
-        const middleQuantity = Math.round(quantity * 2 * ratio);
+        const middleQuantity = (quantity * 2 * ratio);
 
         if (shouldBuy) {
-            lines.push(`Buys ${quantity} ${leg.expiry} ${strike1} ${optionType} for ${price1}`);
-            lines.push(`Sells ${middleQuantity} ${leg.expiry} ${strike2} ${optionType} at ${price2}`);
-            lines.push(`Buys ${quantity} ${leg.expiry} ${strike3} ${optionType} for ${price3}`);
+            lines.push(`Buys ${quantity} ${this.productCode} ${leg.expiry} ${strike1} ${optionType} for ${price1}`);
+            lines.push(`Sells ${middleQuantity} ${this.productCode} ${leg.expiry} ${strike2} ${optionType} at ${price2}`);
+            lines.push(`Buys ${quantity} ${this.productCode} ${leg.expiry} ${strike3} ${optionType} for ${price3}`);
         } else {
-            lines.push(`Sells ${quantity} ${leg.expiry} ${strike1} ${optionType} at ${price1}`);
-            lines.push(`Buys ${middleQuantity} ${leg.expiry} ${strike2} ${optionType} for ${price2}`);
-            lines.push(`Sells ${quantity} ${leg.expiry} ${strike3} ${optionType} at ${price3}`);
+            lines.push(`Sells ${quantity} ${this.productCode} ${leg.expiry} ${strike1} ${optionType} at ${price1}`);
+            lines.push(`Buys ${middleQuantity} ${this.productCode} ${leg.expiry} ${strike2} ${optionType} for ${price2}`);
+            lines.push(`Sells ${quantity} ${this.productCode} ${leg.expiry} ${strike3} ${optionType} at ${price3}`);
         }
 
         return lines;
@@ -269,8 +274,10 @@ export class TradeConfirmer {
         console.log(type.toLowerCase())
         const action = shouldBuy ? ((type.toLowerCase().includes('call') || type.toLowerCase().includes('call spread')) ? 'Sells' : 'Buys') : ((type.toLowerCase().includes('call') || type.toLowerCase().includes('call spread'))? 'Buys' : 'Sells');
         console.log(action)
+        let tempProduct = this.productCode === 'LN' ? 'HP' : this.productCode;
 
-        return `${action} ${futuresQuantity} ${leg.expiry} ${leg.underlying} Futures`;
+
+        return `${action} ${futuresQuantity} ${tempProduct} ${leg.expiry} ${leg.underlying} Futures`;
     }
 
     /**

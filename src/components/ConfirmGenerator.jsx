@@ -235,7 +235,7 @@ const ConfirmGenerator = () => {
         if (!trade) return;
         try {
             // Create a TradeConfirmer instance with the trade
-            const confirmer = new TradeConfirmer(trade);
+            const confirmer = new TradeConfirmer(trade, timeStamp, productCode);
 
             // Generate confirmations with buyers and sellers
             const confirmationText = confirmer.generateConfirmations(counterparties.buyers, counterparties.sellers);
@@ -315,8 +315,9 @@ const ConfirmGenerator = () => {
                                 value={productCode}
                                 onChange={e => setProductCode(e.target.value)}
                             >
-                                <option value="LN">LN</option>
+                                <option value="LN">LN/HP</option>
                                 <option value="PHE">PHE</option>
+                                <option value="Brent">Brent</option>
                             </select>
                         </label>
                     </div>
