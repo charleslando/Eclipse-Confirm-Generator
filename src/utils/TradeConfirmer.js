@@ -92,7 +92,7 @@ export class TradeConfirmer {
 
         // Generate futures line for hedged trades
         if (!this.trade.isLive) {
-            if(this.trade.leg1.underlying === this.trade.leg2.underlying) {
+            if((this.trade.leg2) && (this.trade.leg1.underlying === this.trade.leg2.underlying)) {
                 if(leg === this.trade.leg2) { // only add futures line once for the second leg
                     shouldBuyLeg = !shouldBuyLeg; // flip becauuse its really following the first leg i just want to add it once at the end
                     console.log('is this running');
