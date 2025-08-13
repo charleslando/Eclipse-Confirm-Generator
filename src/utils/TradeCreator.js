@@ -127,7 +127,10 @@ export function breakdownTrade(parsedData) {
     }
     trade.buyers = [];
     trade.sellers =  [];
-    trade.price = parsedData.price || 0;
+    trade.price = parsedData.price *.01 || 0; // Default to 0 if not specified
+    if(trade.price < .001) {
+        trade.price = trade.price * 100; // Ensure price is not negative or too small
+    }
 
     return trade;
 }
