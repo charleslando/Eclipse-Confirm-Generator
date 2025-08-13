@@ -96,7 +96,7 @@ export class TradeConfirmer {
                 if(leg === this.trade.leg2) { // only add futures line once for the second leg
                     shouldBuyLeg = !shouldBuyLeg; // flip becauuse its really following the first leg i just want to add it once at the end
                     console.log('is this running');
-                    const futuresLine = this.generateFuturesLine(this.trade.leg1, quantity, shouldBuyLeg, leg.type, ratio);
+                    const futuresLine = this.generateFuturesLine(this.trade.leg1, quantity, shouldBuyLeg, this.trade.leg1.type, ratio);
                     if (futuresLine) {
                         lines.push(futuresLine);
                     }
@@ -265,7 +265,10 @@ export class TradeConfirmer {
         // Use the delta from the leg, or calculate based on underlying and quantity
         const futuresQuantity = this.calculateFuturesQuantity(leg, quantity, ratio);
         //follow COPS- call = opposite, put = same direction
-        const action = shouldBuy ? (type.toLowerCase().includes('call') ? 'Sells' : 'Buys') : (type.toLowerCase().includes('call') ? 'Buys' : 'Sells');
+        console.log(shouldBuy)
+        console.log(type.toLowerCase())
+        const action = shouldBuy ? ((type.toLowerCase().includes('call') || type.toLowerCase().includes('call spread')) ? 'Sells' : 'Buys') : ((type.toLowerCase().includes('call') || type.toLowerCase().includes('call spread'))? 'Buys' : 'Sells');
+        console.log(action)
 
         return `${action} ${futuresQuantity} ${leg.expiry} ${leg.underlying} Futures`;
     }
@@ -281,7 +284,7 @@ export class TradeConfirmer {
 
         // Simple fallback - you can adjust this logic as needed
 
-        return Math.round(optionQuantity * ratio * 0.4); // Default approximation
+        return (optionQuantity * ratio * 0.4); // Default approximation
     }
 
     /**
