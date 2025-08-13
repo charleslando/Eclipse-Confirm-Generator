@@ -514,17 +514,22 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                                     total = isFiniteNum(total) ? total.toFixed(4) : 'N/A';
                                     const needsSwap = total < 0 && !!trade.leg2;
                                     const priceMatches = !trade.price || trade.price === 0 || Math.abs(parseFloat(total) - parseFloat(trade.price)) < 0.0001;
-                                    const totalStr = trade.price === 0 ? '' : `(${trade.price})` ;
+                                    const totalStr = trade.price === 0 ? '' : `(Expected: ${trade.price})` ;
 
                                     // Calculate the difference when prices don't match
                                     const difference = priceMatches ? 0 : Math.abs(parseFloat(total) - parseFloat(trade.price || 0));
-                                    const differenceStr = !priceMatches && trade.price && trade.price !== 0 ? ` [off by ${difference.toFixed(4)}]` : '';
-
                                     return (
                                         <div className="flex items-center gap-2">
-                        <span className={`text-lg ${!priceMatches ? 'text-red-600 font-bold' : 'text-green-600 font-bold'}`}>
-                            {`${total} ${totalStr}${differenceStr}`}
-                        </span>
+                                            <div className="flex flex-col">
+                                                <span className={`text-lg ${!priceMatches ? 'text-red-600 font-bold' : 'text-green-600 font-bold'}`}>
+                                                    {`${total} ${totalStr}`}
+                                                </span>
+                                                {!priceMatches && trade.price && trade.price !== 0 && (
+                                                    <span className="text-s text-gray-500">
+                                                        [off by {difference.toFixed(4)}]
+                                                    </span>
+                                                )}
+                                            </div>
                                             {needsSwap && (
                                                 <div className="flex items-center gap-2">
                                 <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
