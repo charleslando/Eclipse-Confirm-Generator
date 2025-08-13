@@ -53,6 +53,14 @@ const TradeDetailsPanel = ({
         updateLegField('strikes', newStrikes);
     };
 
+    const handleDeltaBlur = (value) => {
+        updateLegField('delta', parseInt(value, 10) || 0);
+    };
+
+    const handleUnderlyingBlur = (value) => {
+        updateLegField('underlying', parseFloat(value) || 0);
+    };
+
     const color = leg.isBuy? "green":"red";
     const title = leg.isBuy ? 'Buy' : 'Sell';
 
@@ -111,9 +119,8 @@ const TradeDetailsPanel = ({
                                 type="number"
                                 className="w-full p-2 border rounded"
                                 value={leg.delta}
-                                onChange={e => updateLegField('delta',
-                                    parseInt(e.target.value, 10) || 0
-                                )}
+                                onChange={e => updateLegField('delta', e.target.value)}
+                                onBlur={e => handleDeltaBlur(e.target.value)}
                             />
                         </div>
                         <div>
@@ -123,9 +130,8 @@ const TradeDetailsPanel = ({
                                 step="0.01"
                                 className="w-full p-2 border rounded"
                                 value={leg.underlying}
-                                onChange={e => updateLegField('underlying',
-                                    parseFloat(e.target.value) || 0
-                                )}
+                                onChange={e => updateLegField('underlying', e.target.value)}
+                                onBlur={e => handleUnderlyingBlur(e.target.value)}
                             />
                         </div>
                     </>
