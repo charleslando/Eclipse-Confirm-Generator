@@ -63,34 +63,34 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
         }
     };
 
-    const sampleTrade = () => {
-        const examples = [
-            'Z25 5.00c LIVE',
-            'Z25 3.25p LIVE',
-            'Q25 4.25 Call x3.65 28d'
-        ];
-
-        let choice;
-        do {
-            choice = examples[Math.floor(Math.random() * examples.length)];
-        } while (choice === tradeInput);
-
-        setTradeInput(choice);
-    };
-
-    const sampleDualTrade = () => {
-        const examples = [
-            'J26 3.75/4.00cs vs. 3.00/2.75ps x3.56 12d',
-            'U25 2.75/4.25 fence x3.31 27d'
-        ];
-
-        let choice;
-        do {
-            choice = examples[Math.floor(Math.random() * examples.length)];
-        } while (choice === tradeInput);
-
-        setTradeInput(choice);
-    };
+    // const sampleTrade = () => {
+    //     const examples = [
+    //         'Z25 5.00c LIVE',
+    //         'Z25 3.25p LIVE',
+    //         'Q25 4.25 Call x3.65 28d'
+    //     ];
+    //
+    //     let choice;
+    //     do {
+    //         choice = examples[Math.floor(Math.random() * examples.length)];
+    //     } while (choice === tradeInput);
+    //
+    //     setTradeInput(choice);
+    // };
+    //
+    // const sampleDualTrade = () => {
+    //     const examples = [
+    //         'J26 3.75/4.00cs vs. 3.00/2.75ps x3.56 12d',
+    //         'U25 2.75/4.25 fence x3.31 27d'
+    //     ];
+    //
+    //     let choice;
+    //     do {
+    //         choice = examples[Math.floor(Math.random() * examples.length)];
+    //     } while (choice === tradeInput);
+    //
+    //     setTradeInput(choice);
+    // };
 
     const BuildStructure = () => {
 
@@ -467,12 +467,14 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                                 leg={trade.leg1}
                                 setLeg={(leg) => setTrade({ ...trade, leg1: leg })}
                                 trade={trade}
+                                ratio={trade.ratio ? trade.ratio.split('x')[0] : '1'}
 
                             />
                             <LegPricesSection
                                 leg={trade.leg2}
                                 setLeg={(leg) => setTrade({ ...trade, leg2: leg })}
                                 trade={trade}
+                                ratio={trade.ratio ? trade.ratio.split('x')[1] : '1'}
                             />
                         </div>
 
@@ -481,6 +483,7 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                             leg={trade.leg1}
                             setLeg={(leg) => setTrade({ ...trade, leg1: leg })}
                             trade={trade}
+                            ratio={trade.ratio ? trade.ratio.split('x')[0] : '1'}
                         />
                     )}
 
@@ -495,10 +498,15 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                                     const needsSwap = total < 0 && !!trade.leg2;
                                     const priceMatches = !trade.price || trade.price === 0 || Math.abs(parseFloat(total) - parseFloat(trade.price)) < 0.0001;
                                     const totalStr = trade.price === 0 ? '' : `(${trade.price})` ;
+
+                                    // Calculate the difference when prices don't match
+                                    const difference = priceMatches ? 0 : Math.abs(parseFloat(total) - parseFloat(trade.price || 0));
+                                    const differenceStr = !priceMatches && trade.price && trade.price !== 0 ? ` [off by ${difference.toFixed(4)}]` : '';
+
                                     return (
                                         <div className="flex items-center gap-2">
                         <span className={`text-lg ${!priceMatches ? 'text-red-600 font-bold' : 'text-green-600 font-bold'}`}>
-                            {`${total} ${totalStr}`}
+                            {`${total} ${totalStr}${differenceStr}`}
                         </span>
                                             {needsSwap && (
                                                 <div className="flex items-center gap-2">
