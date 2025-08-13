@@ -19,6 +19,10 @@ const ConfirmGenerator = () => {
     const [feedback, setFeedback] = useState(null);
     const [timeStamp, setTimestamp] = useState(new Date().toLocaleTimeString());
 
+    // Set initial title
+
+
+
     function isFiniteNum(v) {
         const num = typeof v === 'string' ? parseFloat(v) : v;
         return typeof num === 'number' && Number.isFinite(num);
