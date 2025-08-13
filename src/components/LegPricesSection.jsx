@@ -35,7 +35,6 @@ const LegPricesSection = ({ leg, setLeg, trade}) => {
                             className="flex-1 p-1 border rounded"
                             placeholder="Price"
                             type="number"
-                            step="0.01"
                             value={(leg.prices && leg.prices[i]) || ''}
                             onChange={e => updateStrikePrice(i, e.target.value)}
                         />
