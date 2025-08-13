@@ -459,6 +459,23 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
 
 
                     </div>
+                    {/* Trade Price Field */}
+                    <div className="mt-4">
+                        <label className="block text-sm font-medium mb-1">Trade Price</label>
+                        <input
+                            type="text"
+                            className="w-32 px-2 py-1 border rounded"
+                            placeholder="0.0000"
+                            value={trade.price || ''}
+                            onChange={(e) => {
+                                const value = e.target.value.replace(/[^\d.-]/g, '');
+                                setTrade({ ...trade, price: value === '' ? 0 : parseFloat(value) });
+                            }}
+                        />
+                        <span className="text-xs text-gray-500 ml-2">
+                                Expected net price for the trade
+                            </span>
+                    </div>
 
                     {/*LEG PRICES*/}
                     {trade.leg2 ?(
