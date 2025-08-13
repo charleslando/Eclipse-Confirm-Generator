@@ -480,12 +480,12 @@ const ConfirmGenerator = () => {
                                     let total = calculatePrice(trade, trade.leg1) - (trade.leg2 ? calculatePrice(trade, trade.leg2) : 0);
                                     total = isFiniteNum(total) ? total.toFixed(4) : 'N/A';
                                     const needsSwap = total < 0 && !!trade.leg2;
-                                    const priceMatches = trade.price === undefined || Math.abs(parseFloat(total) - parseFloat(trade.price)) < 0.0001;
-
+                                    const priceMatches = !trade.price || trade.price === 0 || Math.abs(parseFloat(total) - parseFloat(trade.price)) < 0.0001;
+                                    const totalStr = trade.price === 0 ? '' : `(${trade.price})` ;
                                     return (
                                         <div className="flex items-center gap-2">
-                        <span className={`text-lg ${!priceMatches ? 'text-red-600 font-bold' : ''}`}>
-                            {`${total} (${trade.price})`}
+                        <span className={`text-lg ${!priceMatches ? 'text-red-600 font-bold' : 'text-green-600 font-bold'}`}>
+                            {`${total} ${totalStr}`}
                         </span>
                                             {needsSwap && (
                                                 <div className="flex items-center gap-2">
