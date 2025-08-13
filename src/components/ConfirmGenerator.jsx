@@ -541,12 +541,12 @@ const ConfirmGenerator = () => {
 
             {output && <OutputSection output={output} />}
             {/* Debug Info */}
-            <div className="bg-gray-100 p-3 rounded text-xs">
-                <strong>Trade Data:</strong>
-                <pre>{JSON.stringify(trade, null, 2)}</pre>
-                <strong>Parsed Data:</strong>
-                <pre>{JSON.stringify(parsedData, null, 2)}</pre>
-            </div>
+            {/*<div className="bg-gray-100 p-3 rounded text-xs">*/}
+            {/*    <strong>Trade Data:</strong>*/}
+            {/*    <pre>{JSON.stringify(trade, null, 2)}</pre>*/}
+            {/*    <strong>Parsed Data:</strong>*/}
+            {/*    <pre>{JSON.stringify(parsedData, null, 2)}</pre>*/}
+            {/*</div>*/}
         </div>
     );
 };
