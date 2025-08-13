@@ -233,9 +233,10 @@ const ConfirmGenerator = () => {
 
     const generateConfirmations = () => {
         if (!trade) return;
+        console.log(JSON.stringify(trade, null, 2));
         try {
             // Create a TradeConfirmer instance with the trade
-            const confirmer = new TradeConfirmer(trade, timeStamp, productCode);
+            const confirmer = new TradeConfirmer(trade, timeStamp, productCode, tradeInput);
 
             // Generate confirmations with buyers and sellers
             const confirmationText = confirmer.generateConfirmations(counterparties.buyers, counterparties.sellers);
@@ -276,8 +277,8 @@ const ConfirmGenerator = () => {
             <div className="flex gap-x-2 mt-2">
                 <button onClick={handleParse} className="px-4 py-2 bg-blue-600 text-white rounded">Parse</button>
                 <button onClick={clearInput} className="px-4 py-2 bg-blue-600 text-white rounded">Clear</button>
-                <button onClick={sampleTrade} className="px-4 py-2 bg-fuchsia-700 text-white rounded">Sample Single</button>
-                <button onClick={sampleDualTrade} className="px-4 py-2 bg-fuchsia-700 text-white rounded">Sample Double</button>
+                {/*<button onClick={sampleTrade} className="px-4 py-2 bg-fuchsia-700 text-white rounded">Sample Single</button>*/}
+                {/*<button onClick={sampleDualTrade} className="px-4 py-2 bg-fuchsia-700 text-white rounded">Sample Double</button>*/}
                 <button onClick={BuildStructure} className="px-4 py-2 bg-green-600 text-white rounded">Build Structure</button>
             </div>
 
@@ -477,16 +478,19 @@ const ConfirmGenerator = () => {
                                 <span className="font-bold text-sm">Total Price:</span>
                                 {(() => {
                                     let total = calculatePrice(trade, trade.leg1) - (trade.leg2 ? calculatePrice(trade, trade.leg2) : 0);
-                                    total = isFiniteNum(total) ? total : 'N/A';
+                                    total = isFiniteNum(total) ? total.toFixed(4) : 'N/A';
                                     const needsSwap = total < 0 && !!trade.leg2;
+                                    const priceMatches = trade.price === undefined || Math.abs(parseFloat(total) - parseFloat(trade.price)) < 0.0001;
 
                                     return (
                                         <div className="flex items-center gap-2">
-                                            <span className="text-lg">{(total)}</span>
+                        <span className={`text-lg ${!priceMatches ? 'text-red-600 font-bold' : ''}`}>
+                            {`${total} (${trade.price})`}
+                        </span>
                                             {needsSwap && (
                                                 <div className="flex items-center gap-2">
                                 <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
-                                  Net negative — consider swapping legs
+                                    Net negative — consider swapping legs
                                 </span>
                                                     <button
                                                         className={`text-xs px-2 py-1 rounded ${
@@ -540,6 +544,7 @@ const ConfirmGenerator = () => {
             )}
 
             {output && <OutputSection output={output} />}
+
             {/* Debug Info */}
             {/*<div className="bg-gray-100 p-3 rounded text-xs">*/}
             {/*    <strong>Trade Data:</strong>*/}

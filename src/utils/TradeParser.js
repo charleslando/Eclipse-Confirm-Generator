@@ -390,6 +390,10 @@ export class TradeParser {
         // Ratio (eg. "1.5x2" or "1x2")
         const ratio = tokens.find(t => /^[1-9]\d*(?:\.\d+)?x\d+$/.test(t));
 
+        // Price
+        const priceMatch = raw.match(/(?:trades?|live)\s+(-?\d*\.?\d+)/i);
+        const price = priceMatch ? parseFloat(priceMatch[1]) : null;
+
         // (3) now collect ALL strikes and redistribute by config
         const allStrikes = collectAllStrikes(raw);
         const { n1, n2 } = getExpectedStrikeCounts(strategyType);
@@ -412,7 +416,8 @@ export class TradeParser {
             delta2: delta2 || delta,
             isLive,
             isVersus,
-            ratio
+            ratio,
+            price
         };
     }
 }

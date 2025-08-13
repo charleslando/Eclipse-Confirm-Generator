@@ -1,9 +1,10 @@
 // TradeConfirmer.js - Dedicated trade confirmation generator
 export class TradeConfirmer {
-    constructor(trade, timeStamp, productCode) {
+    constructor(trade, timeStamp, productCode, tradeInput) {
         this.trade = trade;
         this.timeStamp = timeStamp;
         this.productCode = productCode;
+        this.tradeInput = tradeInput; // Store the original trade input for reference
     }
 
     /**
@@ -12,10 +13,15 @@ export class TradeConfirmer {
      * @param {Array} sellers - Array of seller objects {name, quantity}
      * @returns {string} - Formatted confirmation text
      */
-    generateConfirmations(buyers = [], sellers = [], timeStamp, productCode) {
+    generateConfirmations(buyers = [], sellers = []) {
         if (!this.trade) return '';
 
+
+
         const confirmations = [];
+
+        //const tradeLine = this.generateTradeLine(this.tradeInput);
+        //confirmations.push(tradeLine);
 
         // Default counterparties if none provided
         if (!buyers.length && !sellers.length) {
@@ -33,7 +39,8 @@ export class TradeConfirmer {
             confirmations.push(this.generateCounterpartyConfirmation(name, quantity, 'SELLER'));
         });
 
-        return confirmations.join('\n\n');
+        const tradeLine = this.generateTradeLine(this.tradeInput);
+        return tradeLine + '\n' + confirmations.join('\n\n');
     }
 
     /**
@@ -42,6 +49,7 @@ export class TradeConfirmer {
     generateCounterpartyConfirmation(name, quantity, side) {
         const isBuyer = side === 'BUYER';
         const lines = [];
+
 
         // Header
         lines.push(`${side}: ${name.toUpperCase()}`);
@@ -305,6 +313,10 @@ export class TradeConfirmer {
         } else if (legNumber === 2) {
             return parts.length > 1 ? parseFloat(parts[1]) || 1 : 1;
         }
+    }
+
+    generateTradeLine(tradeInput) {
+        return `${tradeInput}`;
     }
 }
 

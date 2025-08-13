@@ -127,6 +127,7 @@ export function breakdownTrade(parsedData) {
     }
     trade.buyers = [];
     trade.sellers =  [];
+    trade.price = parsedData.price || 0;
 
     return trade;
 }
