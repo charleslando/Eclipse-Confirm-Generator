@@ -526,11 +526,15 @@ const ConfirmGenerator = () => {
                             title="Buyers"
                             list={counterparties.buyers}
                             setList={l => setCounterparties({ ...counterparties, buyers: l })}
+                            otherList={counterparties.sellers}
+                            validationEnabled={false}
                         />
                         <CounterpartySection
                             title="Sellers"
                             list={counterparties.sellers}
                             setList={l => setCounterparties({ ...counterparties, sellers: l })}
+                            otherList={counterparties.buyers}
+                            validationEnabled={true}
                         />
                         <button
                             onClick={generateConfirmations}
