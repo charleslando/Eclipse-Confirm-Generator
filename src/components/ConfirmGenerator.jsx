@@ -477,7 +477,7 @@ const ConfirmGenerator = () => {
                                 <span className="font-bold text-sm">Total Price:</span>
                                 {(() => {
                                     let total = calculatePrice(trade, trade.leg1) - (trade.leg2 ? calculatePrice(trade, trade.leg2) : 0);
-                                    total = isFiniteNum(total) ? total.toFixed(2) : 'N/A';
+                                    total = isFiniteNum(total) ? total : 'N/A';
                                     const needsSwap = total < 0 && !!trade.leg2;
 
                                     return (
