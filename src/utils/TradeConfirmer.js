@@ -163,10 +163,9 @@ export class TradeConfirmer {
         const action = shouldBuy ? 'Buys' : 'Sells';
         const prep = shouldBuy ? 'for' : 'at';
         const optionType = leg.type.toLowerCase();
-        const strike = leg.strikes[0];
+        const strike = parseFloat(leg.strikes[0]).toFixed(2);
         const price = leg.prices[0];
         const adjustedQuantity = (quantity * ratio);
-
 
         return `${action} ${adjustedQuantity} ${this.productCode} ${leg.expiry} ${strike} ${optionType} ${prep} ${price}`;
     }
@@ -178,11 +177,9 @@ export class TradeConfirmer {
         const lines = [];
         const isCallSpread = leg.type.toLowerCase().includes('call');
         const optionType = isCallSpread ? 'Call' : 'Put';
-        const [strike1, strike2] = leg.strikes;
+        const [strike1, strike2] = leg.strikes.map(s => parseFloat(s).toFixed(2));
         const [price1, price2] = leg.prices;
         const quantity2 = (quantity * ratio);
-
-
 
         if (shouldBuy) {
             lines.push(`Buys ${quantity} ${this.productCode} ${leg.expiry} ${strike1} ${optionType} for ${price1}`);
@@ -202,7 +199,7 @@ export class TradeConfirmer {
         const lines = [];
         const action = shouldBuy ? 'Buys' : 'Sells';
         const prep = shouldBuy ? 'for' : 'at';
-        const strike = leg.strikes[0];
+        const strike = parseFloat(leg.strikes[0]).toFixed(2);
         const [putPrice, callPrice] = leg.prices;
         const quantity2 = (quantity * ratio);
 
@@ -213,21 +210,11 @@ export class TradeConfirmer {
     }
 
     /**
-     * Generate lines for strangle (different strikes, put + call)
-     */
-
-
-    /**
-     * Generate lines for ratio spreads (1x2, 1x3, etc.)
-     */
-
-
-    /**
      * Generate lines for fence (protective collar)
      */
     generateFenceLines(leg, quantity, shouldBuy, ratio = 1) {
         const lines = [];
-        const [putStrike, callStrike] = leg.strikes;
+        const [putStrike, callStrike] = leg.strikes.map(s => parseFloat(s).toFixed(2));
         const [putPrice, callPrice] = leg.prices;
         const quantity2 = (quantity * ratio);
 
@@ -242,9 +229,6 @@ export class TradeConfirmer {
         return lines;
     }
 
-
-
-
     /**
      * Generate lines for butterfly spreads
      */
@@ -252,7 +236,7 @@ export class TradeConfirmer {
         const lines = [];
         const isCall = leg.type.toLowerCase().includes('call');
         const optionType = isCall ? 'Call' : 'Put';
-        const [strike1, strike2, strike3] = leg.strikes;
+        const [strike1, strike2, strike3] = leg.strikes.map(s => parseFloat(s).toFixed(2));
         const [price1, price2, price3] = leg.prices;
         const middleQuantity = (quantity * 2 * ratio);
 
@@ -285,7 +269,7 @@ export class TradeConfirmer {
         let tempProduct = this.productCode === 'LN' ? 'HP' : this.productCode;
 
 
-        return `${action} ${futuresQuantity} ${tempProduct} ${leg.expiry} ${leg.underlying} Futures`;
+        return `${action} ${futuresQuantity} ${tempProduct} ${leg.expiry} ${leg.underlying.toFixed(2)} Futures`;
     }
 
     /**
