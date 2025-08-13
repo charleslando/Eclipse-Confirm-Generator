@@ -9,7 +9,7 @@ import TradeDetailsPanel from './TradeDetailsPanel';
 import { STRAT_CONFIGS, STRAT_STRIKE_MAP } from "../utils/TradeCreator.js";
 import LegPricesSection from "./LegPricesSection.jsx";
 
-const ConfirmGenerator = () => {
+const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
     const [trade, setTrade] = useState(null);
     const [productCode, setProductCode] = useState('LN');
     const [tradeInput, setTradeInput] = useState('');
@@ -19,7 +19,7 @@ const ConfirmGenerator = () => {
     const [feedback, setFeedback] = useState(null);
     const [timeStamp, setTimestamp] = useState(new Date().toLocaleTimeString());
 
-    // Set initial title
+
 
 
 
@@ -57,6 +57,10 @@ const ConfirmGenerator = () => {
         setCounterparties({ buyers: [], sellers: [] });
         setOutput('');
         setFeedback(null);
+
+        if(onTradeInputChange) {
+            onTradeInputChange(tabId, '');
+        }
     };
 
     const sampleTrade = () => {
@@ -273,7 +277,12 @@ const ConfirmGenerator = () => {
                 className="w-full p-2 border rounded"
                 rows={3}
                 value={tradeInput}
-                onChange={e => setTradeInput(e.target.value)}
+                onChange={e => {
+                    setTradeInput(e.target.value);
+                    if (onTradeInputChange) {
+                        onTradeInputChange(tabId, e.target.value);
+                    }
+                }}
                 placeholder="Paste your trade here"
             />
 
