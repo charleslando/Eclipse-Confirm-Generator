@@ -47,7 +47,7 @@ const LegPricesSection = ({ leg, setLeg, trade, ratio}) => {
             <div className="mt-4">
                 <h1 className="font-semibold mb-2 text-sm">Trade Price</h1>
                 <div className="w-full p-2 border rounded bg-gray-50 text-sm font-mono">
-                    {Math.abs(calculatePrice(trade, leg))}
+                    {Math.abs(calculatePrice(trade, leg)).toFixed(4)}
                 </div>
             </div>
         </div>
