@@ -359,8 +359,8 @@ export class TradeParser {
 
 
 
-        // Underlying ratios
-        const underlyingMatches = raw.match(/[Xx](\d+(?:\.\d+)?)/g) || [];
+        // Underlying
+        const underlyingMatches = raw.match(/\b[Xx](\d+(?:\.\d+)?)/g) || [];
         let underlying = 0;
         let underlying2 = null;
 
@@ -392,7 +392,7 @@ export class TradeParser {
 
         // Price
         const priceMatch = raw.match(/(?:trades?|live)\s+(-?\d*\.?\d+)/i);
-        const price = priceMatch ? parseFloat(priceMatch[1]) : null;
+        const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
 
         // (3) now collect ALL strikes and redistribute by config
         const allStrikes = collectAllStrikes(raw);
@@ -417,7 +417,7 @@ export class TradeParser {
             isLive,
             isVersus,
             ratio,
-            price
+            price: price || 0
         };
     }
 }

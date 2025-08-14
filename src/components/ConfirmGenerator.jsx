@@ -20,9 +20,6 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
     const [timeStamp, setTimestamp] = useState(new Date().toLocaleTimeString());
 
 
-
-
-
     function isFiniteNum(v) {
         const num = typeof v === 'string' ? parseFloat(v) : v;
         return typeof num === 'number' && Number.isFinite(num);
@@ -108,6 +105,7 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
         newTrade.exchange = trade.exchange;
         newTrade.isLive = trade.isLive;
         newTrade.ratio = trade.ratio;
+        newTrade.price = trade.price
 
         // Copy over existing leg data if it exists, but preserve the new array sizes
         if (trade.leg1 && newTrade.leg1) {
@@ -466,7 +464,7 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                             type="text"
                             className="w-32 px-2 py-1 border rounded"
                             placeholder="0.0000"
-                            value={trade.price || ''}
+                            value={trade.price || 0}
                             onChange={(e) => {
                                 const value = e.target.value.replace(/[^\d.-]/g, '');
                                 setTrade({ ...trade, price: value === '' ? 0 : parseFloat(value) });
@@ -514,6 +512,7 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                                     total = isFiniteNum(total) ? total.toFixed(4) : 'N/A';
                                     const needsSwap = total < 0 && !!trade.leg2;
                                     const priceMatches = !trade.price || trade.price === 0 || Math.abs(parseFloat(total) - parseFloat(trade.price)) < 0.0001;
+                                    console.log({total, tradePrice: trade.price, priceMatches});
                                     const totalStr = trade.price === 0 ? '' : `(Expected: ${trade.price.toFixed(4)})` ;
 
                                     // Calculate the difference when prices don't match
