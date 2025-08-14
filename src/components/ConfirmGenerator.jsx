@@ -210,10 +210,10 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
 
 
     const handleParse = () => {
-        if (!tradeInput.trim()) {
-            setFeedback({ type: 'error', message: 'Trade input cannot be empty.' });
-            return;
-        }
+        // if (!tradeInput.trim()) {
+        //     setFeedback({ type: 'error', message: 'Trade input cannot be empty.' });
+        //     return;
+        // }
 
         setFeedback({ type: 'info', message: 'Parsing trade input...' });
 
@@ -292,19 +292,19 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                 <button onClick={clearInput} className="px-4 py-2 bg-blue-600 text-white rounded">Clear</button>
                 {/*<button onClick={sampleTrade} className="px-4 py-2 bg-fuchsia-700 text-white rounded">Sample Single</button>*/}
                 {/*<button onClick={sampleDualTrade} className="px-4 py-2 bg-fuchsia-700 text-white rounded">Sample Double</button>*/}
-                <button onClick={BuildStructure} className="px-4 py-2 bg-green-600 text-white rounded">Build Structure</button>
+                {/*<button onClick={BuildStructure} className="px-4 py-2 bg-green-600 text-white rounded">Build Structure</button>*/}
             </div>
 
             {/*FEEDBACK*/}
-            {feedback && (
-                <div className={`mt-2 p-2 rounded ${
-                    feedback.type === 'error' ? 'bg-red-100 text-red-700' :
-                        feedback.type === 'success' ? 'bg-green-100 text-green-700' :
-                            'bg-blue-100 text-blue-700'}`}
-                >
-                    {feedback.message}
-                </div>
-            )}
+            {/*{feedback && (*/}
+            {/*    <div className={`mt-2 p-2 rounded ${*/}
+            {/*        feedback.type === 'error' ? 'bg-red-100 text-red-700' :*/}
+            {/*            feedback.type === 'success' ? 'bg-green-100 text-green-700' :*/}
+            {/*                'bg-blue-100 text-blue-700'}`}*/}
+            {/*    >*/}
+            {/*        {feedback.message}*/}
+            {/*    </div>*/}
+            {/*)}*/}
 
             {trade && (
                 <>
