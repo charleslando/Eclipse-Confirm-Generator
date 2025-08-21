@@ -314,7 +314,12 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                             <select
                                 className="p-1 border rounded"
                                 value={trade.exchange}
-                                onChange={e => setTrade({ ...trade, exchange: e.target.value})}
+                                onChange={e => {
+                                    const newExchange = e.target.value;
+                                    const newProductCode = newExchange === 'ICE' ? 'PHE' : 'LN';
+                                    setTrade({ ...trade, exchange: newExchange });
+                                    setProductCode(newProductCode);
+                                }}
                             >
                                 <option value="CME">CME</option>
                                 <option value="ICE">ICE</option>
