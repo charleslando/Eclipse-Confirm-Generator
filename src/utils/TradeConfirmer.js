@@ -71,6 +71,7 @@ export class TradeConfirmer {
         // Generate lines for leg1 (premium leg)
         if (this.trade.leg1) {
             let ratio = this.parseRatio(this.trade.ratio, 1);
+            console.log('this is the ratio 1', ratio);
             const leg1Lines = this.generateLegLines(this.trade.leg1, quantity, isBuyer, ratio);
             lines.push(...leg1Lines);
         }
@@ -99,6 +100,7 @@ export class TradeConfirmer {
         // Generate option lines based on leg type
         const optionLines = this.generateOptionLines(leg, quantity, shouldBuyLeg, ratio);
         lines.push(...optionLines);
+        console.log('this is the ratio 2', ratio);
 
         // Generate futures line for hedged trades
         if (!this.trade.isLive) {
@@ -106,6 +108,8 @@ export class TradeConfirmer {
                 if(leg === this.trade.leg2) { // only add futures line once for the second leg
                     shouldBuyLeg = !shouldBuyLeg; // flip becauuse its really following the first leg i just want to add it once at the end
                     console.log('is this running');
+                    console.log('this is the ratio 3', ratio);
+                    ratio = this.parseRatio(this.trade.ratio, 1); // use leg1 ratio for futures
                     const futuresLine = this.generateFuturesLine(this.trade.leg1, quantity, shouldBuyLeg, this.trade.leg1.type, ratio);
                     if (futuresLine) {
                         lines.push(futuresLine);
@@ -117,8 +121,6 @@ export class TradeConfirmer {
                     lines.push(futuresLine);
                 }
             }
-
-
         }
 
         return lines;
@@ -162,9 +164,9 @@ export class TradeConfirmer {
     generateSingleOptionLine(leg, quantity, shouldBuy, ratio) {
         const action = shouldBuy ? 'Buys' : 'Sells';
         const prep = shouldBuy ? 'for' : 'at';
-        const optionType = leg.type.toLowerCase();
+        const optionType = leg.type.charAt(0).toUpperCase() + leg.type.slice(1);
         const strike = parseFloat(leg.strikes[0]).toFixed(2);
-        const price = leg.prices[0];
+        const price = parseFloat(leg.prices[0]).toFixed(3);
         const adjustedQuantity = (quantity * ratio);
 
         return `${action} ${adjustedQuantity} ${this.productCode} ${leg.expiry} ${strike} ${optionType} ${prep} ${price}`;
@@ -178,7 +180,7 @@ export class TradeConfirmer {
         const isCallSpread = leg.type.toLowerCase().includes('call');
         const optionType = isCallSpread ? 'Call' : 'Put';
         const [strike1, strike2] = leg.strikes.map(s => parseFloat(s).toFixed(2));
-        const [price1, price2] = leg.prices;
+        const [price1, price2] = leg.prices.map(p => p.toFixed(3));
         const quantity2 = (quantity * ratio);
 
         if (shouldBuy) {
@@ -200,7 +202,7 @@ export class TradeConfirmer {
         const action = shouldBuy ? 'Buys' : 'Sells';
         const prep = shouldBuy ? 'for' : 'at';
         const strike = parseFloat(leg.strikes[0]).toFixed(2);
-        const [putPrice, callPrice] = leg.prices;
+        const [putPrice, callPrice] = leg.prices.map(p => p.toFixed(3));
         const quantity2 = (quantity * ratio);
 
         lines.push(`${action} ${quantity} ${this.productCode} ${leg.expiry} ${strike} Put ${prep} ${putPrice}`);
@@ -215,7 +217,7 @@ export class TradeConfirmer {
     generateFenceLines(leg, quantity, shouldBuy, ratio = 1) {
         const lines = [];
         const [putStrike, callStrike] = leg.strikes.map(s => parseFloat(s).toFixed(2));
-        const [putPrice, callPrice] = leg.prices;
+        const [putPrice, callPrice] = leg.prices.map(p => p.toFixed(3));
         const quantity2 = (quantity * ratio);
 
         if (shouldBuy) {
@@ -237,7 +239,7 @@ export class TradeConfirmer {
         const isCall = leg.type.toLowerCase().includes('call');
         const optionType = isCall ? 'Call' : 'Put';
         const [strike1, strike2, strike3] = leg.strikes.map(s => parseFloat(s).toFixed(2));
-        const [price1, price2, price3] = leg.prices;
+        const [price1, price2, price3] = leg.prices.map(p => p.toFixed(3));
         const middleQuantity = (quantity * 2 * ratio);
 
         if (shouldBuy) {
@@ -262,10 +264,11 @@ export class TradeConfirmer {
         // Use the delta from the leg, or calculate based on underlying and quantity
         const futuresQuantity = this.calculateFuturesQuantity(leg, quantity, ratio);
         //follow COPS- call = opposite, put = same direction
-        console.log(shouldBuy)
-        console.log(type.toLowerCase())
+        //console.log(shouldBuy)
+        //console.log(type.toLowerCase())
         const action = shouldBuy ? ((type.toLowerCase().includes('call') || type.toLowerCase().includes('call spread')) ? 'Sells' : 'Buys') : ((type.toLowerCase().includes('call') || type.toLowerCase().includes('call spread'))? 'Buys' : 'Sells');
-        console.log(action)
+        //console.log(action)
+        //console.log(ratio)
         let tempProduct = this.productCode === 'LN' ? 'HP' : this.productCode;
 
 
@@ -283,7 +286,7 @@ export class TradeConfirmer {
 
         // Simple fallback - you can adjust this logic as needed
 
-        return (optionQuantity * ratio * 0.4); // Default approximation
+        return (optionQuantity * ratio)// * 0.4); // Default approximation
     }
 
     /**

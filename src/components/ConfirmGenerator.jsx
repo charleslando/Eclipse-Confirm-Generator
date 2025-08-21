@@ -173,17 +173,18 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
         }
 
         // Deep-ish clone (adjust if you have nested objects beyond arrays/primitives)
+
         const leg1Copy = {
             ...trade.leg1,
             strikes: [...(trade.leg1.strikes || [])],
             prices:  [...(trade.leg1.prices  || [])],
-            isBuy: !trade.leg1.isBuy
+            isBuy:  (trade.leg1.isBuy === trade.leg2.isBuy)? trade.leg1.isBuy : !trade.leg1.isBuy
         };
         const leg2Copy = {
             ...trade.leg2,
             strikes: [...(trade.leg2.strikes || [])],
             prices:  [...(trade.leg2.prices  || [])],
-            isBuy: !trade.leg2.isBuy
+            isBuy: (trade.leg1.isBuy === trade.leg2.isBuy)? trade.leg2.isBuy : !trade.leg2.isBuy
         };
 
         // Swap ALL details: type, isBuy, expiry, strikes, prices, underlying, delta, etc.
@@ -463,14 +464,33 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                         <input
                             type="text"
                             className="w-32 px-2 py-1 border rounded"
-                            placeholder="0.0000"
-                            value={trade.price || 0}
+                            value={trade.price || ''}
                             onChange={(e) => {
-                                const value = e.target.value.replace(/[^\d.-]/g, '');
-                                setTrade({ ...trade, price: value === '' ? 0 : parseFloat(value) });
+                                let value = e.target.value.replace(/[^\d.-]/g, '');
+
+                                // Prevent multiple decimal points
+                                const decimalCount = (value.match(/\./g) || []).length;
+                                if (decimalCount > 1) {
+                                    value = value.substring(0, value.lastIndexOf('.'));
+                                }
+
+                                // Prevent multiple negative signs
+                                if (value.indexOf('-') > 0) {
+                                    value = value.replace(/-/g, '');
+                                    if (e.target.value.startsWith('-')) value = '-' + value;
+                                }
+
+                                setTrade({ ...trade, price: value });
+                            }}
+                            onBlur={(e) => {
+                                // Parse to number on blur for validation/formatting
+                                const numValue = parseFloat(e.target.value);
+                                if (!isNaN(numValue)) {
+                                    setTrade({ ...trade, price: numValue });
+                                }
                             }}
                         />
-                        <span className="text-xs text-gray-500 ml-2">
+                            <span className="text-xs text-gray-500 ml-2">
                                 Expected net price for the trade
                             </span>
                     </div>
@@ -508,15 +528,24 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                             <div>
                                 <span className="font-bold text-sm">Total Price:</span>
                                 {(() => {
-                                    let total = calculatePrice(trade, trade.leg1) - (trade.leg2 ? calculatePrice(trade, trade.leg2) : 0);
+                                    let total = 0;
+                                    if (trade.leg2 && !trade.leg2.isBuy){
+                                          total = calculatePrice(trade, trade.leg1) - (trade.leg2 ? calculatePrice(trade, trade.leg2) : 0);
+                                        }
+                                    else{
+                                        total = calculatePrice(trade, trade.leg1) + (trade.leg2 ? calculatePrice(trade, trade.leg2) : 0);
+
+                                    }
                                     total = isFiniteNum(total) ? total.toFixed(4) : 'N/A';
                                     const needsSwap = total < 0 && !!trade.leg2;
-                                    const priceMatches = !trade.price || trade.price === 0 || Math.abs(parseFloat(total) - parseFloat(trade.price)) < 0.0001;
-                                    console.log({total, tradePrice: trade.price, priceMatches});
-                                    const totalStr = trade.price === 0 ? '' : `(Expected: ${trade.price.toFixed(4)})` ;
+                                    const parsedTradePrice = parseFloat(trade.price) || 0;
+                                    const priceMatches = !trade.price || trade.price === '' || trade.price === '0' ||
+                                        Math.abs(parseFloat(total) - parsedTradePrice) < 0.0001;
+                                    const totalStr = (!trade.price || trade.price === '' || parsedTradePrice === 0) ? '' :
+                                        `(Expected: ${parsedTradePrice.toFixed(4)})`;
 
                                     // Calculate the difference when prices don't match
-                                    const difference = priceMatches ? 0 : Math.abs(parseFloat(total) - parseFloat(trade.price || 0));
+                                    const difference = priceMatches ? 0 : Math.abs(parseFloat(total) - parsedTradePrice);
                                     return (
                                         <div className="flex items-center gap-2">
                                             <div className="flex flex-col">
@@ -531,9 +560,9 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                                             </div>
                                             {needsSwap && (
                                                 <div className="flex items-center gap-2">
-                                <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
-                                    Net negative — consider swapping legs
-                                </span>
+                                                    <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                                                        Net negative — consider swapping legs
+                                                    </span>
                                                     <button
                                                         className={`text-xs px-2 py-1 rounded ${
                                                             hasAllPrices(trade) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
