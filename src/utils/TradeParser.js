@@ -338,6 +338,8 @@ export class TradeParser {
         let expiry = this.parseExpiry(expiryMatches[0]);
         let expiry2 = isVersus ? this.parseExpiry(expiryMatches[1]) : null;
 
+
+
         // Strikes
         let strikes = [];
         const strikeTok = tokens.find(t => /^([\d.]+(?:\/[\d.]+)*)([a-z]+)?$/i.test(t));

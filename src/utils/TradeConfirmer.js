@@ -270,9 +270,10 @@ export class TradeConfirmer {
         //console.log(action)
         //console.log(ratio)
         let tempProduct = this.productCode === 'LN' ? 'HP' : this.productCode;
+        let parsed_underlying = parseFloat(leg.underlying);
 
 
-        return `${action} ${futuresQuantity} ${tempProduct} ${leg.expiry} ${leg.underlying.toFixed(2)} Futures`;
+        return `${action} ${futuresQuantity} ${tempProduct} ${leg.expiry} ${parsed_underlying.toFixed(2)} Futures`;
     }
 
     /**

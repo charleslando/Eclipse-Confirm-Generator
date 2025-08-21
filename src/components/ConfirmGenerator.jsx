@@ -469,7 +469,7 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                         <input
                             type="text"
                             className="w-32 px-2 py-1 border rounded"
-                            value={trade.price || ''}
+                            value={trade.price.toFixed(4) || ''}
                             onChange={(e) => {
                                 let value = e.target.value.replace(/[^\d.-]/g, '');
 
