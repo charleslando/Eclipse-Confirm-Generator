@@ -1,3 +1,6 @@
 V25 3.25/3.50 1x2 cs x2.89 7d TRADES .0175 (500x)
 -didnt get underlying right
+-FIXED0
 
+G26 7.00/8.00 1x2 cs vs. H26 10.00c LIVE TRADES .0200 (100x)
+-read strikes3 as 1 instead of 10.00

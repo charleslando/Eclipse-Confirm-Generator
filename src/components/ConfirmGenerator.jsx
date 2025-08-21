@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import EclipseLogo from '../assets/EclipseLogo.jpg';
 import {TradeParser} from '../utils/TradeParser';
 import {breakdownTrade, calculatePrice, Trade} from '../utils/TradeCreator.js';
@@ -95,6 +95,131 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
             setTrade(newTrade);
             setFeedback({ type: 'success', message: 'Single structure initialized!' });
     };
+
+
+
+
+
+
+
+
+
+
+    // Add this helper function to your ConfirmGenerator component
+
+// Helper function to check if a price is valid and finite
+    function isValidPrice(price) {
+        const num = typeof price === 'string' ? parseFloat(price) : price;
+        return typeof num === 'number' && Number.isFinite(num) && num !== 0;
+    }
+
+// Helper function to count total filled prices across all legs
+    function getTotalFilledPrices(trade) {
+        let total = 0;
+        if (trade.leg1?.prices) {
+            total += trade.leg1.prices.filter(price => isValidPrice(price)).length;
+        }
+        if (trade.leg2?.prices) {
+            total += trade.leg2.prices.filter(price => isValidPrice(price)).length;
+        }
+        return total;
+    }
+
+// Helper function to get total required prices
+    function getTotalRequiredPrices(trade) {
+        let total = 0;
+        if (trade.leg1?.strikes) {
+            total += trade.leg1.strikes.length;
+        }
+        if (trade.leg2?.strikes) {
+            total += trade.leg2.strikes.length;
+        }
+        return total;
+    }
+
+// Auto-fill function
+    function autoFillMissingPrice(trade, setTrade) {
+        if (!trade.price || trade.price === 0) return;
+
+        const totalRequired = getTotalRequiredPrices(trade);
+        const totalFilled = getTotalFilledPrices(trade);
+
+        // Only auto-fill if we're missing exactly one price
+        if (totalFilled !== totalRequired - 1) return;
+
+        // Calculate current total from all filled prices
+        let currentTotal = 0;
+
+        if (trade.leg1?.prices && trade.leg1?.strikes) {
+            const ratio1 = parseFloat((trade.ratio?.split('x')[0]) || '1');
+            for (let i = 0; i < trade.leg1.strikes.length; i++) {
+                const price = trade.leg1.prices[i];
+                if (isValidPrice(price)) {
+                    currentTotal += parseFloat(price) * ratio1;
+                }
+            }
+        }
+
+        if (trade.leg2?.prices && trade.leg2?.strikes) {
+            const ratio2 = parseFloat((trade.ratio?.split('x')[1]) || '1');
+            for (let i = 0; i < trade.leg2.strikes.length; i++) {
+                const price = trade.leg2.prices[i];
+                if (isValidPrice(price)) {
+                    // Subtract leg2 prices (assuming leg2 is sold in spread strategies)
+                    currentTotal -= parseFloat(price) * ratio2;
+                }
+            }
+        }
+
+        const targetTotal = parseFloat(trade.price);
+
+        // Find which leg and index needs to be filled
+        if (trade.leg1 && trade.leg1.prices) {
+            for (let i = 0; i < trade.leg1.strikes.length; i++) {
+                if (!isValidPrice(trade.leg1.prices[i])) {
+                    const ratio1 = parseFloat((trade.ratio?.split('x')[0]) || '1');
+                    const missingPrice = (targetTotal - currentTotal) / ratio1;
+
+                    const newLeg1 = { ...trade.leg1 };
+                    newLeg1.prices = [...newLeg1.prices];
+                    newLeg1.prices[i] = parseFloat(missingPrice.toFixed(4));
+
+                    setTrade({ ...trade, leg1: newLeg1 });
+                    return;
+                }
+            }
+        }
+
+        if (trade.leg2 && trade.leg2.prices) {
+            for (let i = 0; i < trade.leg2.strikes.length; i++) {
+                if (!isValidPrice(trade.leg2.prices[i])) {
+                    const ratio2 = parseFloat((trade.ratio?.split('x')[1]) || '1');
+                    const missingPrice = (currentTotal - targetTotal) / ratio2;
+
+                    const newLeg2 = { ...trade.leg2 };
+                    newLeg2.prices = [...newLeg2.prices];
+                    newLeg2.prices[i] = parseFloat(missingPrice.toFixed(4));
+
+                    setTrade({ ...trade, leg2: newLeg2 });
+                    return;
+                }
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     function extracted(strategyType) {
@@ -454,26 +579,70 @@ const ConfirmGenerator = ({onTradeInputChange, tabId}) => {
                             />
                         )}
 
-
-
                     </div>
-                    {/* Trade Price Field */}
+
+
+                    {/*/!* Trade Price Field *!/*/}
+                    {/*<div className="mt-4">*/}
+                    {/*    <label className="block text-sm font-medium mb-1">Trade Price</label>*/}
+                    {/*    <input*/}
+                    {/*        type="text"*/}
+                    {/*        className="w-32 px-2 py-1 border rounded"*/}
+                    {/*        placeholder="0.0000"*/}
+                    {/*        value={trade.price || 0}*/}
+                    {/*        onChange={(e) => {*/}
+                    {/*            const value = e.target.value.replace(/[^\d.-]/g, '');*/}
+                    {/*            setTrade({ ...trade, price: value === '' ? 0 : parseFloat(value) });*/}
+                    {/*        }}*/}
+                    {/*    />*/}
+                    {/*    <span className="text-xs text-gray-500 ml-2">*/}
+                    {/*            Expected net price for the trade*/}
+                    {/*        </span>*/}
+                    {/*</div>*/}
+
+
                     <div className="mt-4">
                         <label className="block text-sm font-medium mb-1">Trade Price</label>
                         <input
                             type="text"
                             className="w-32 px-2 py-1 border rounded"
                             placeholder="0.0000"
-                            value={trade.price || 0}
+                            value={trade.price.toFixed(4) || 0}
                             onChange={(e) => {
                                 const value = e.target.value.replace(/[^\d.-]/g, '');
-                                setTrade({ ...trade, price: value === '' ? 0 : parseFloat(value) });
+                                const newPrice = value === '' ? 0 : parseFloat(value);
+                                const updatedTrade = { ...trade, price: newPrice };
+                                setTrade(updatedTrade);
+
+                                // Trigger auto-fill after state update
+                                setTimeout(() => {
+                                    autoFillMissingPrice(updatedTrade, setTrade);
+                                }, 0);
                             }}
                         />
                         <span className="text-xs text-gray-500 ml-2">
-                                Expected net price for the trade
-                            </span>
+                            Expected net price for the trade
+                        </span>
+                        {(() => {
+                            const totalRequired = getTotalRequiredPrices(trade);
+                            const totalFilled = getTotalFilledPrices(trade);
+                            const remaining = totalRequired - totalFilled;
+
+                            if (trade.price && trade.price !== 0 && remaining === 1) {
+                                return (
+                                    <div className="text-xs text-blue-600 mt-1">
+                                        🔮 Enter one more price to auto-fill the last one
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()}
                     </div>
+
+
+
+
+
 
                     {/*LEG PRICES*/}
                     {trade.leg2 ?(
